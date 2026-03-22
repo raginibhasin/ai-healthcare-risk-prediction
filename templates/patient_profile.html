@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- PATIENT PROFILE HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-user text-primary me-2"></i>Patient Profile
+        </h1>
+        <p class="text-muted mb-0">Detailed patient information and medical history</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="window.print()">
+            <i class="fas fa-print me-1"></i>Print Profile
+        </button>
+        <a href="/edit/{{ patient[0] }}" class="btn btn-warning">
+            <i class="fas fa-edit me-1"></i>Edit Patient
+        </a>
+        <button class="btn btn-secondary" onclick="window.history.back()">
+            <i class="fas fa-arrow-left me-1"></i>Back to List
+        </button>
+    </div>
+</div>
+
+<!-- PATIENT INFO CARDS -->
+<div class="row g-4 mb-4">
+    <!-- BASIC INFO -->
+    <div class="col-xl-4">
+        <div class="card border-0 shadow-custom h-100">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-id-card text-primary me-2"></i>Basic Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="avatar-lg bg-primary-subtle text-primary mx-auto mb-3">
+                        {{ patient[1][0] }}
+                    </div>
+                    <h4 class="mb-1">{{ patient[1] }}</h4>
+                    <p class="text-muted mb-0">Patient ID: #{{ patient[0] }}</p>
+                </div>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="info-item">
+                            <label class="text-muted small">Age</label>
+                            <div class="fw-semibold">{{ patient[2] }} years</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="info-item">
+                            <label class="text-muted small">Gender</label>
+                            <div class="fw-semibold">{{ patient[3] }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="info-item">
+                            <label class="text-muted small">Weight</label>
+                            <div class="fw-semibold">{{ patient[4] }} kg</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="info-item">
+                            <label class="text-muted small">Department</label>
+                            <div class="fw-semibold">{{ patient[10] or 'General' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VITAL SIGNS -->
+    <div class="col-xl-4">
+        <div class="card border-0 shadow-custom h-100">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-heartbeat text-danger me-2"></i>Vital Signs
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="vital-sign-card mb-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="vital-label">Blood Pressure</div>
+                            <div class="vital-value text-danger">{{ patient[5] }}</div>
+                        </div>
+                        <i class="fas fa-tachometer text-danger fa-2x"></i>
+                    </div>
+                </div>
+                <div class="vital-sign-card mb-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="vital-label">Heart Rate</div>
+                            <div class="vital-value text-warning">{{ patient[6] }} bpm</div>
+                        </div>
+                        <i class="fas fa-heart text-warning fa-2x"></i>
+                    </div>
+                </div>
+                <div class="vital-sign-card">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="vital-label">Risk Level</div>
+                            <div class="vital-value
+                                {% if patient[8] == 'High' %}text-danger
+                                {% elif patient[8] == 'Medium' %}text-warning
+                                {% else %}text-success{% endif %}">
+                                {{ patient[8] }} Risk
+                            </div>
+                        </div>
+                        <i class="fas fa-exclamation-triangle
+                            {% if patient[8] == 'High' %}text-danger
+                            {% elif patient[8] == 'Medium' %}text-warning
+                            {% else %}text-success{% endif %} fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MEDICAL CONDITIONS -->
+    <div class="col-xl-4">
+        <div class="card border-0 shadow-custom h-100">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-stethoscope text-info me-2"></i>Medical Conditions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="condition-item mb-3">
+                    <h6 class="mb-2">Existing Conditions</h6>
+                    <span class="badge bg-info">{{ patient[7] or 'None' }}</span>
+                </div>
+                <div class="condition-item">
+                    <h6 class="mb-2">Registration Date</h6>
+                    <p class="text-muted mb-0">{{ patient[9] }}</p>
+                </div>
+                <div class="condition-item">
+                    <h6 class="mb-2">Total Visits</h6>
+                    <p class="text-primary fw-semibold mb-0">{{ history|length }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MEDICAL HISTORY -->
+<div class="card border-0 shadow-custom mb-4">
+    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-history text-secondary me-2"></i>Medical History
+        </h5>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addHistoryModal">
+            <i class="fas fa-plus me-1"></i>Add Entry
+        </button>
+    </div>
+    <div class="card-body">
+        {% if history %}
+        <div class="timeline">
+            {% for entry in history %}
+            <div class="timeline-item">
+                <div class="timeline-marker bg-primary"></div>
+                <div class="timeline-content">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-1">{{ entry[3] }}</h6>
+                        <small class="text-muted">{{ entry[2] }}</small>
+                    </div>
+                    <p class="mb-2">{{ entry[4] }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Dr. {{ entry[5] }}</small>
+                        <span class="badge bg-light text-dark">{{ entry[3] }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Medical History</h5>
+            <p class="text-muted">Add the first medical history entry for this patient.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ADD HISTORY MODAL -->
+<div class="modal fade" id="addHistoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Medical History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/add_history/{{ patient[0] }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" name="type" required>
+                            <option value="Visit">Visit</option>
+                            <option value="Test">Test</option>
+                            <option value="Medication">Medication</option>
+                            <option value="Surgery">Surgery</option>
+                            <option value="Consultation">Consultation</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Doctor</label>
+                        <input type="text" class="form-control" name="doctor" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.info-item {
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.vital-sign-card {
+    padding: 1rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+}
+
+.vital-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+}
+
+.vital-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.condition-item {
+    padding: 1rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.condition-item:last-child {
+    border-bottom: none;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    top: 0.5rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px #e9ecef;
+}
+
+.timeline-content {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+</style>
+
+{% endblock %}

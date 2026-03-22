@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- BACKUP & RESTORE HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-database text-primary me-2"></i>Backup & Restore
+        </h1>
+        <p class="text-muted mb-0">Manage system backups and data restoration</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-success" onclick="createBackup()">
+            <i class="fas fa-plus me-1"></i>Create Backup
+        </button>
+        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#scheduleBackupModal">
+            <i class="fas fa-clock me-1"></i>Schedule Backup
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- BACKUP STATISTICS -->
+    <div class="col-12">
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-custom">
+                    <div class="card-body text-center">
+                        <div class="h4 mb-1 text-primary">{{ total_backups }}</div>
+                        <div class="text-muted small">Total Backups</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-custom">
+                    <div class="card-body text-center">
+                        <div class="h4 mb-1 text-success">{{ successful_backups }}</div>
+                        <div class="text-muted small">Successful</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-custom">
+                    <div class="card-body text-center">
+                        <div class="h4 mb-1 text-warning">{{ failed_backups }}</div>
+                        <div class="text-muted small">Failed</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-custom">
+                    <div class="card-body text-center">
+                        <div class="h4 mb-1 text-info">{{ backup_size }}</div>
+                        <div class="text-muted small">Total Size</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BACKUP LOCATIONS -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-custom mb-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-folder text-primary me-2"></i>Backup Locations
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3 p-3 border rounded">
+                    <div class="backup-location-icon bg-primary text-white me-3">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold">Local Server</div>
+                        <small class="text-muted">/var/backups/hospital</small>
+                        <div class="mt-1">
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3 p-3 border rounded">
+                    <div class="backup-location-icon bg-info text-white me-3">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold">Cloud Storage</div>
+                        <small class="text-muted">AWS S3 Bucket</small>
+                        <div class="mt-1">
+                            <span class="badge bg-warning">Syncing</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center p-3 border rounded">
+                    <div class="backup-location-icon bg-secondary text-white me-3">
+                        <i class="fas fa-hdd"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold">External Drive</div>
+                        <small class="text-muted">USB Drive E:</small>
+                        <div class="mt-1">
+                            <span class="badge bg-danger">Disconnected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BACKUP SETTINGS -->
+        <div class="card border-0 shadow-custom">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-cog text-primary me-2"></i>Backup Settings
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Retention Period</label>
+                    <select class="form-select form-select-sm" id="retentionPeriod">
+                        <option value="30">30 days</option>
+                        <option value="90" selected>90 days</option>
+                        <option value="180">180 days</option>
+                        <option value="365">1 year</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Compression Level</label>
+                    <select class="form-select form-select-sm" id="compressionLevel">
+                        <option value="none">No Compression</option>
+                        <option value="fast">Fast Compression</option>
+                        <option value="normal" selected>Normal Compression</option>
+                        <option value="maximum">Maximum Compression</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="encryptBackups" checked>
+                        <label class="form-check-label small">
+                            Encrypt backups
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="verifyBackups" checked>
+                        <label class="form-check-label small">
+                            Verify backup integrity
+                        </label>
+                    </div>
+                </div>
+                <div class="d-grid">
+                    <button class="btn btn-outline-primary btn-sm" onclick="saveBackupSettings()">
+                        Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BACKUP HISTORY -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-custom">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-history text-primary me-2"></i>Backup History
+                </h6>
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm" style="width: auto;" id="backupTypeFilter">
+                        <option value="">All Types</option>
+                        <option value="full">Full Backup</option>
+                        <option value="incremental">Incremental</option>
+                        <option value="manual">Manual</option>
+                    </select>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="refreshBackups()">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Backup Name</th>
+                                <th>Type</th>
+                                <th>Size</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for backup in backups %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="backup-icon me-3">
+                                            <i class="fas fa-archive text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ backup.name }}</div>
+                                            <small class="text-muted">{{ backup.description }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge
+                                        {% if backup.type == 'full' %}bg-primary
+                                        {% elif backup.type == 'incremental' %}bg-info
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ backup.type|title }}
+                                    </span>
+                                </td>
+                                <td>{{ backup.size }}</td>
+                                <td>
+                                    <span class="badge
+                                        {% if backup.status == 'completed' %}bg-success
+                                        {% elif backup.status == 'running' %}bg-warning
+                                        {% elif backup.status == 'failed' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ backup.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ backup.created }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="downloadBackup('{{ backup.id }}')" title="Download">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-info" onclick="viewBackupDetails('{{ backup.id }}')" title="Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success" onclick="restoreBackup('{{ backup.id }}')" title="Restore">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteBackup('{{ backup.id }}', '{{ backup.name }}')" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- SCHEDULE BACKUP MODAL -->
+<div class="modal fade" id="scheduleBackupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-clock me-2"></i>Schedule Backup
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="scheduleBackupForm">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Backup Name</label>
+                            <input type="text" class="form-control" id="scheduleName" placeholder="e.g., Daily Backup" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Backup Type</label>
+                            <select class="form-select" id="scheduleType" required>
+                                <option value="full">Full Backup</option>
+                                <option value="incremental">Incremental Backup</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Frequency</label>
+                            <select class="form-select" id="scheduleFrequency" required>
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Time</label>
+                            <input type="time" class="form-control" id="scheduleTime" value="02:00" required>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="scheduleEnabled" checked>
+                                <label class="form-check-label">
+                                    Enable scheduled backup
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Schedule Backup</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Backup Management Functions
+function createBackup() {
+    if (confirm('Create a new backup? This may take several minutes.')) {
+        showAlert('Backup creation started...', 'info');
+        // Simulate backup progress
+        setTimeout(() => {
+            showAlert('Backup completed successfully!', 'success');
+            location.reload();
+        }, 3000);
+    }
+}
+
+function downloadBackup(backupId) {
+    showAlert('Downloading backup file...', 'info');
+}
+
+function viewBackupDetails(backupId) {
+    showAlert('Loading backup details...', 'info');
+}
+
+function restoreBackup(backupId) {
+    if (confirm('Are you sure you want to restore from this backup? This will overwrite current data.')) {
+        showAlert('Restoration started...', 'warning');
+    }
+}
+
+function deleteBackup(backupId, backupName) {
+    if (confirm(`Delete backup "${backupName}"? This action cannot be undone.`)) {
+        showAlert('Backup deleted successfully...', 'warning');
+    }
+}
+
+function refreshBackups() {
+    showAlert('Refreshing backup list...', 'info');
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+
+function saveBackupSettings() {
+    showAlert('Backup settings saved!', 'success');
+}
+
+// Schedule backup form submission
+document.getElementById('scheduleBackupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const scheduleData = {
+        name: document.getElementById('scheduleName').value,
+        type: document.getElementById('scheduleType').value,
+        frequency: document.getElementById('scheduleFrequency').value,
+        time: document.getElementById('scheduleTime').value,
+        enabled: document.getElementById('scheduleEnabled').checked
+    };
+
+    console.log('Scheduling backup:', scheduleData);
+    showAlert('Backup scheduled successfully!', 'success');
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('scheduleBackupModal'));
+    modal.hide();
+    this.reset();
+});
+
+// Alert Function
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+</script>
+
+<style>
+.shadow-custom {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.card {
+    border-radius: 0.5rem;
+}
+
+.backup-location-icon, .backup-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+</style>
+
+{% endblock %}

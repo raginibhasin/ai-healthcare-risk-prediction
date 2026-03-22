@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- ADMIN DASHBOARD HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-user-shield text-primary me-2"></i>Admin Dashboard
+        </h1>
+        <p class="text-muted mb-0">System administration and monitoring</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-warning" onclick="systemBackup()">
+            <i class="fas fa-download me-1"></i>Backup System
+        </button>
+        <button class="btn btn-outline-info" onclick="viewLogs()">
+            <i class="fas fa-list me-1"></i>View Logs
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- SYSTEM OVERVIEW -->
+    <div class="col-lg-8">
+
+        <!-- SYSTEM METRICS -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-custom">
+                    <div class="card-body text-center">
+                        <div class="stats-icon mb-2">
+                            <i class="fas fa-users fa-2x text-primary"></i>
+                        </div>
+                        <div class="h4 mb-1 text-primary">{{ total_users }}</div>
+                        <div class="text-muted small">Total Users</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-custom">
+                    <div class="card-body text-center">
+                        <div class="stats-icon mb-2">
+                            <i class="fas fa-user-md fa-2x text-success"></i>
+                        </div>
+                        <div class="h4 mb-1 text-success">{{ active_doctors }}</div>
+                        <div class="text-muted small">Active Doctors</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-custom">
+                    <div class="card-body text-center">
+                        <div class="stats-icon mb-2">
+                            <i class="fas fa-calendar-check fa-2x text-info"></i>
+                        </div>
+                        <div class="h4 mb-1 text-info">{{ today_appointments }}</div>
+                        <div class="text-muted small">Today's Appointments</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-custom">
+                    <div class="card-body text-center">
+                        <div class="stats-icon mb-2">
+                            <i class="fas fa-server fa-2x text-warning"></i>
+                        </div>
+                        <div class="h4 mb-1 text-warning">{{ system_load }}%</div>
+                        <div class="text-muted small">System Load</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SYSTEM STATUS -->
+        <div class="card border-0 shadow-custom mb-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-tachometer-alt text-primary me-2"></i>System Status
+                </h6>
+            </div>
+            <div class="card-body">
+
+                <!-- STATUS INDICATORS -->
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center p-3 border rounded">
+                            <div class="status-indicator bg-success me-3"></div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">Database Server</div>
+                                <small class="text-muted">Operational - Last backup: {{ last_backup }}</small>
+                            </div>
+                            <i class="fas fa-check-circle text-success"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center p-3 border rounded">
+                            <div class="status-indicator bg-success me-3"></div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">Web Server</div>
+                                <small class="text-muted">Running - Uptime: {{ uptime }}</small>
+                            </div>
+                            <i class="fas fa-check-circle text-success"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center p-3 border rounded">
+                            <div class="status-indicator bg-success me-3"></div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">Risk Assessment Engine</div>
+                                <small class="text-muted">Active - Model loaded</small>
+                            </div>
+                            <i class="fas fa-check-circle text-success"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center p-3 border rounded">
+                            <div class="status-indicator bg-warning me-3"></div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">Email Service</div>
+                                <small class="text-muted">Maintenance mode</small>
+                            </div>
+                            <i class="fas fa-exclamation-triangle text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RECENT ACTIVITY -->
+        <div class="card border-0 shadow-custom">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-history text-primary me-2"></i>Recent Activity
+                </h6>
+                <a href="/admin/logs" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item px-3 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="activity-icon bg-primary text-white me-3">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">New patient registered</div>
+                                <small class="text-muted">John Doe - 2 minutes ago</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item px-3 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="activity-icon bg-success text-white me-3">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">Appointment completed</div>
+                                <small class="text-muted">Dr. Smith - 15 minutes ago</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item px-3 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="activity-icon bg-warning text-white me-3">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">High risk patient alert</div>
+                                <small class="text-muted">Patient ID: 1234 - 1 hour ago</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group-item px-3 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="activity-icon bg-info text-white me-3">
+                                <i class="fas fa-pills"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">Medicine stock updated</div>
+                                <small class="text-muted">Inventory - 2 hours ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ADMIN ACTIONS & QUICK STATS -->
+    <div class="col-lg-4">
+
+        <!-- ADMIN ACTIONS -->
+        <div class="card border-0 shadow-custom mb-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-tools text-primary me-2"></i>Admin Actions
+                </h6>
+            </div>
+            <div class="card-body d-grid gap-2">
+                <a href="/admin/users" class="btn btn-outline-primary">
+                    <i class="fas fa-users-cog me-2"></i>Manage Users
+                </a>
+                <a href="/admin/backup" class="btn btn-outline-success">
+                    <i class="fas fa-database me-2"></i>Backup & Restore
+                </a>
+                <a href="/admin/logs" class="btn btn-outline-info">
+                    <i class="fas fa-file-alt me-2"></i>System Logs
+                </a>
+                <a href="/admin/settings" class="btn btn-outline-warning">
+                    <i class="fas fa-cog me-2"></i>System Settings
+                </a>
+                <button class="btn btn-outline-danger" onclick="emergencyShutdown()">
+                    <i class="fas fa-power-off me-2"></i>Emergency Shutdown
+                </button>
+            </div>
+        </div>
+
+        <!-- STORAGE USAGE -->
+        <div class="card border-0 shadow-custom mb-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-hdd text-primary me-2"></i>Storage Usage
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Database Files</small>
+                        <small>2.4 GB / 10 GB</small>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-primary" style="width: 24%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Log Files</small>
+                        <small>156 MB / 1 GB</small>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-info" style="width: 15.6%"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Backup Files</small>
+                        <small>8.9 GB / 50 GB</small>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: 17.8%"></div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <small class="text-muted">Total: 11.5 GB / 61 GB (19%)</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECURITY STATUS -->
+        <div class="card border-0 shadow-custom">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-shield-alt text-primary me-2"></i>Security Status
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas fa-lock text-success me-2"></i>
+                    <div>
+                        <div class="fw-semibold small">SSL Certificate</div>
+                        <small class="text-muted">Valid until Dec 2026</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas fa-user-check text-success me-2"></i>
+                    <div>
+                        <div class="fw-semibold small">Last Security Scan</div>
+                        <small class="text-muted">2 days ago - Clean</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas fa-key text-success me-2"></i>
+                    <div>
+                        <div class="fw-semibold small">Failed Login Attempts</div>
+                        <small class="text-muted">3 in last 24 hours</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-firewall text-warning me-2"></i>
+                    <div>
+                        <div class="fw-semibold small">Firewall Status</div>
+                        <small class="text-muted">Rules need update</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+// Admin Dashboard Functions
+function systemBackup() {
+    if (confirm('Start system backup? This may take a few minutes.')) {
+        showAlert('System backup initiated...', 'info');
+    }
+}
+
+function viewLogs() {
+    window.location.href = '/admin/logs';
+}
+
+function emergencyShutdown() {
+    if (confirm('Are you sure you want to initiate emergency shutdown? This will stop all services.')) {
+        showAlert('Emergency shutdown initiated...', 'danger');
+    }
+}
+
+// Alert Function
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Admin dashboard loaded');
+});
+</script>
+
+<style>
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+}
+
+.shadow-custom {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.card {
+    border-radius: 0.5rem;
+}
+
+.stats-icon {
+    opacity: 0.8;
+}
+</style>
+
+{% endblock %}

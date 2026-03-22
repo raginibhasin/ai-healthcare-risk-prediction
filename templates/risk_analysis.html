@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- RISK ANALYSIS HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-brain text-primary me-2"></i>AI Patient Risk Assessment
+        </h1>
+        <p class="text-muted mb-0">Advanced machine learning-powered health risk evaluation</p>
+    </div>
+    <a href="/risk-dashboard" class="btn btn-outline-primary">
+        <i class="fas fa-chart-bar me-1"></i>View Risk Dashboard
+    </a>
+</div>
+
+<div class="row">
+    <!-- ASSESSMENT FORM -->
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-custom h-100">
+            <div class="card-body p-4">
+                <h5 class="card-title mb-4">
+                    <i class="fas fa-clipboard-list text-primary me-2"></i>Patient Health Assessment
+                </h5>
+
+                <form action="/predict" method="POST" class="needs-validation" novalidate>
+
+                    <!-- BASIC INFORMATION -->
+                    <div class="mb-4">
+                        <h6 class="mb-3 fw-semibold">Basic Health Metrics</h6>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Age (years)</label>
+                                <input type="number" name="age" class="form-control" placeholder="Enter age (20-80)" min="1" max="120" required>
+                                <div class="invalid-feedback">Please enter a valid age.</div>
+                                <small class="text-muted">Age is a critical factor in risk assessment</small>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Weight (kg)</label>
+                                <input type="number" name="weight" class="form-control" placeholder="Enter weight (40-150)" min="30" max="200" step="0.1" required>
+                                <div class="invalid-feedback">Please enter a valid weight.</div>
+                                <small class="text-muted">Body weight affects cardiovascular risk</small>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Heart Rate (bpm)</label>
+                                <input type="number" name="heart_rate" class="form-control" placeholder="Enter heart rate (50-150)" min="40" max="180" required>
+                                <div class="invalid-feedback">Please enter a valid heart rate.</div>
+                                <small class="text-muted">Resting heart rate indicates cardiovascular health</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADDITIONAL FACTORS -->
+                    <div class="mb-4">
+                        <h6 class="mb-3 fw-semibold">Additional Risk Factors</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Blood Pressure</label>
+                                <select name="blood_pressure" class="form-select">
+                                    <option value="">Select Category</option>
+                                    <option value="normal">Normal (&lt;120/80)</option>
+                                    <option value="elevated">Elevated (120-129/&lt;80)</option>
+                                    <option value="high1">High Blood Pressure Stage 1 (130-139/80-89)</option>
+                                    <option value="high2">High Blood Pressure Stage 2 (≥140/≥90)</option>
+                                    <option value="crisis">Hypertensive Crisis (≥180/≥120)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Smoking Status</label>
+                                <select name="smoking" class="form-select">
+                                    <option value="">Select Status</option>
+                                    <option value="never">Never Smoked</option>
+                                    <option value="former">Former Smoker</option>
+                                    <option value="current">Current Smoker</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Existing Conditions</label>
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="diabetes" id="diabetes">
+                                            <label class="form-check-label" for="diabetes">Diabetes</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="hypertension" id="hypertension">
+                                            <label class="form-check-label" for="hypertension">Hypertension</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="cholesterol" id="cholesterol">
+                                            <label class="form-check-label" for="cholesterol">High Cholesterol</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="family_history" id="family_history">
+                                            <label class="form-check-label" for="family_history">Family History of Heart Disease</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUBMIT BUTTON -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-brain me-2"></i>Analyze Risk Level
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESULTS PANEL -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-custom h-100">
+            <div class="card-body p-4">
+                <h5 class="card-title mb-4">
+                    <i class="fas fa-chart-pie text-primary me-2"></i>Risk Assessment Results
+                </h5>
+
+                {% if prediction %}
+                <!-- RESULT DISPLAY -->
+                <div class="text-center mb-4">
+                    <div class="risk-result-circle mb-3
+                        {% if prediction == 'Low Risk' %}bg-success
+                        {% elif prediction == 'Medium Risk' %}bg-warning
+                        {% else %}bg-danger{% endif %}">
+                        <i class="fas
+                            {% if prediction == 'Low Risk' %}fa-shield-alt
+                            {% elif prediction == 'Medium Risk' %}fa-exclamation-triangle
+                            {% else %}fa-exclamation-circle{% endif %} fa-2x text-white"></i>
+                    </div>
+                    <h4 class="mb-2
+                        {% if prediction == 'Low Risk' %}text-success
+                        {% elif prediction == 'Medium Risk' %}text-warning
+                        {% else %}text-danger{% endif %}">
+                        {{ prediction }}
+                    </h4>
+                    <p class="text-muted mb-0">Based on AI analysis of your health metrics</p>
+                </div>
+
+                <!-- RECOMMENDATIONS -->
+                <div class="alert
+                    {% if prediction == 'Low Risk' %}alert-success
+                    {% elif prediction == 'Medium Risk' %}alert-warning
+                    {% else %}alert-danger{% endif %}">
+                    <h6 class="alert-heading mb-2">
+                        <i class="fas fa-lightbulb me-1"></i>
+                        {% if prediction == 'Low Risk' %}Great job maintaining your health!
+                        {% elif prediction == 'Medium Risk' %}Consider lifestyle improvements
+                        {% else %}Immediate medical attention recommended{% endif %}
+                    </h6>
+                    <ul class="mb-0 small">
+                        {% if prediction == 'Low Risk' %}
+                        <li>Continue your healthy lifestyle habits</li>
+                        <li>Schedule regular check-ups</li>
+                        <li>Maintain balanced diet and exercise</li>
+                        {% elif prediction == 'Medium Risk' %}
+                        <li>Consult with a healthcare provider</li>
+                        <li>Monitor blood pressure regularly</li>
+                        <li>Consider dietary modifications</li>
+                        <li>Increase physical activity</li>
+                        {% else %}
+                        <li>Seek immediate medical consultation</li>
+                        <li>Follow prescribed treatment plans</li>
+                        <li>Monitor symptoms closely</li>
+                        <li>Emergency contact: Available 24/7</li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <!-- SHARE RESULTS -->
+                <div class="text-center">
+                    <button class="btn btn-outline-primary btn-sm" onclick="printResults()">
+                        <i class="fas fa-print me-1"></i>Print Results
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm ms-2" onclick="shareResults()">
+                        <i class="fas fa-share me-1"></i>Share
+                    </button>
+                </div>
+
+                {% else %}
+                <!-- PLACEHOLDER -->
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">Risk Assessment Results</h6>
+                    <p class="text-muted mb-0">Enter your health information and click "Analyze Risk Level" to see your results</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- INFORMATION SECTION -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body">
+                <h5 class="mb-3">
+                    <i class="fas fa-info-circle text-primary me-2"></i>About Risk Assessment
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>How It Works</h6>
+                        <p class="text-muted small">Our AI-powered system analyzes key health metrics using machine learning algorithms trained on extensive medical data to provide personalized risk assessments.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Important Notes</h6>
+                        <p class="text-muted small">This assessment is for informational purposes only and should not replace professional medical advice. Always consult with healthcare providers for comprehensive health evaluations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+})();
+
+function printResults() {
+    window.print();
+}
+
+function shareResults() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Health Risk Assessment',
+            text: 'I just completed a health risk assessment. Check yours at our hospital!',
+            url: window.location.href
+        });
+    } else {
+        // Fallback for browsers that don't support Web Share API
+        const url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Link copied to clipboard!');
+        });
+    }
+}
+</script>
+
+<style>
+.shadow-custom {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.risk-result-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.form-label {
+    color: #495057;
+    font-weight: 600;
+}
+
+.btn {
+    border-radius: 0.375rem;
+}
+
+.card {
+    border-radius: 0.5rem;
+}
+
+.alert ul li {
+    margin-bottom: 0.25rem;
+}
+</style>
+
+Predict Risk
+</button>
+
+</form>
+
+</div>
+
+</div>
+
+<!-- Result Card -->
+<div class="col-md-6">
+
+{% if prediction %}
+
+{% if prediction == "High Risk" %}
+
+<div class="card shadow-lg text-center p-5 border-danger">
+
+<h2 class="text-danger">⚠ HIGH RISK</h2>
+
+<p class="mt-3">
+Immediate medical attention recommended.
+Patient vitals indicate elevated health risk.
+</p>
+
+</div>
+
+{% elif prediction == "Medium Risk" %}
+
+<div class="card shadow-lg text-center p-5 border-warning">
+
+<h2 class="text-warning">⚠ MEDIUM RISK</h2>
+
+<p class="mt-3">
+Patient requires monitoring and further evaluation.
+Preventive measures advised.
+</p>
+
+</div>
+
+{% else %}
+
+<div class="card shadow-lg text-center p-5 border-success">
+
+<h2 class="text-success">✔ LOW RISK</h2>
+
+<p class="mt-3">
+Patient vitals appear stable.
+Continue routine health monitoring.
+</p>
+
+</div>
+
+{% endif %}
+
+{% endif %}
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}
+

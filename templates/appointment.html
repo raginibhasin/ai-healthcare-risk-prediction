@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- APPOINTMENT BOOKING HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-calendar-plus text-primary me-2"></i>Book an Appointment
+        </h1>
+        <p class="text-muted mb-0">Schedule your consultation with our healthcare professionals</p>
+    </div>
+    <a href="/appointments-dashboard" class="btn btn-outline-primary">
+        <i class="fas fa-list me-1"></i>View All Appointments
+    </a>
+</div>
+
+<!-- SUCCESS MESSAGE -->
+{% if message %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fas fa-check-circle me-2"></i>{{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body p-4">
+                <form action="/book-appointment" method="POST" class="needs-validation" novalidate>
+
+                    <!-- PATIENT INFORMATION -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-user text-primary me-2"></i>Patient Information
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Full Name *</label>
+                                <input type="text" name="patient" class="form-control" placeholder="Enter your full name" required>
+                                <div class="invalid-feedback">Please provide your name.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Phone Number</label>
+                                <input type="tel" name="phone" class="form-control" placeholder="Enter phone number">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DOCTOR SELECTION -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-user-md text-primary me-2"></i>Select Doctor
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Choose Specialization</label>
+                                <select name="specialization" id="specializationSelect" class="form-select" required>
+                                    <option value="">Select Specialization</option>
+                                    <option value="Cardiologist">Cardiology</option>
+                                    <option value="Neurologist">Neurology</option>
+                                    <option value="Pediatrician">Pediatrics</option>
+                                    <option value="Orthopedic Surgeon">Orthopedics</option>
+                                    <option value="Gynecologist">Gynecology</option>
+                                    <option value="Dermatologist">Dermatology</option>
+                                    <option value="Ophthalmologist">Ophthalmology</option>
+                                    <option value="Urologist">Urology</option>
+                                    <option value="Endocrinologist">Endocrinology</option>
+                                    <option value="Psychiatrist">Psychiatry</option>
+                                    <option value="Radiologist">Radiology</option>
+                                    <option value="Anesthesiologist">Anesthesiology</option>
+                                    <option value="Pathologist">Pathology</option>
+                                    <option value="Oncologist">Oncology</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a specialization.</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Available Doctors</label>
+                                <select name="doctor" id="doctorSelect" class="form-select" required>
+                                    <option value="">Select Doctor</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a doctor.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- APPOINTMENT DETAILS -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-calendar-alt text-primary me-2"></i>Appointment Details
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Preferred Date *</label>
+                                <input type="date" name="date" class="form-control" required>
+                                <div class="invalid-feedback">Please select a date.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Preferred Time *</label>
+                                <select name="time" class="form-select" required>
+                                    <option value="">Select Time</option>
+                                    <option value="09:00">9:00 AM</option>
+                                    <option value="09:30">9:30 AM</option>
+                                    <option value="10:00">10:00 AM</option>
+                                    <option value="10:30">10:30 AM</option>
+                                    <option value="11:00">11:00 AM</option>
+                                    <option value="11:30">11:30 AM</option>
+                                    <option value="14:00">2:00 PM</option>
+                                    <option value="14:30">2:30 PM</option>
+                                    <option value="15:00">3:00 PM</option>
+                                    <option value="15:30">3:30 PM</option>
+                                    <option value="16:00">4:00 PM</option>
+                                    <option value="16:30">4:30 PM</option>
+                                    <option value="17:00">5:00 PM</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a time.</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Reason for Visit *</label>
+                                <textarea name="reason" class="form-control" rows="3" placeholder="Please describe your symptoms or reason for the appointment" required></textarea>
+                                <div class="invalid-feedback">Please provide a reason for the visit.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUBMIT BUTTON -->
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a href="/" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-calendar-check me-1"></i>Book Appointment
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Doctor data from Flask
+const doctors = [
+    {% for doctor in doctors %}
+    {
+        id: {{ doctor.ID }},
+        name: "{{ doctor.Name }}",
+        specialization: "{{ doctor.Specialization }}",
+        available: {{ 'true' if doctor.Availability == 'Available' else 'false' }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+// Update doctor options based on specialization
+document.getElementById('specializationSelect').addEventListener('change', function() {
+    const specialization = this.value;
+    const doctorSelect = document.getElementById('doctorSelect');
+
+    // Clear current options
+    doctorSelect.innerHTML = '<option value="">Select Doctor</option>';
+
+    if (specialization) {
+        // Filter doctors by specialization
+        const filteredDoctors = doctors.filter(doctor => {
+            // Map specialization names to doctor specializations
+            const specMap = {
+                'Cardiologist': 'Cardiologist',
+                'Neurologist': 'Neurologist',
+                'Pediatrician': 'Pediatrician',
+                'Orthopedic Surgeon': 'Orthopedic Surgeon',
+                'Gynecologist': 'Gynecologist',
+                'Dermatologist': 'Dermatologist',
+                'Ophthalmologist': 'Ophthalmologist',
+                'Urologist': 'Urologist',
+                'Endocrinologist': 'Endocrinologist',
+                'Psychiatrist': 'Psychiatrist',
+                'Radiologist': 'Radiologist',
+                'Anesthesiologist': 'Anesthesiologist',
+                'Pathologist': 'Pathologist',
+                'Oncologist': 'Oncologist'
+            };
+            return doctor.specialization === specMap[specialization];
+        });
+
+        // Add filtered doctors to select
+        filteredDoctors.forEach(doctor => {
+            const option = document.createElement('option');
+            option.value = doctor.name;
+            option.textContent = `${doctor.name} ${doctor.available ? '(Available)' : '(Unavailable)'}`;
+            if (!doctor.available) {
+                option.disabled = true;
+                option.style.color = '#6c757d';
+            }
+            doctorSelect.appendChild(option);
+        });
+    }
+});
+
+// Form validation
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+})();
+
+// Set minimum date to today
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[name="date"]').setAttribute('min', today);
+});
+</script>
+
+<style>
+.shadow-custom {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.form-label {
+    color: #495057;
+    font-weight: 600;
+}
+
+.btn {
+    border-radius: 0.375rem;
+}
+
+.card {
+    border-radius: 0.5rem;
+}
+
+{% endblock %}
+

@@ -1,23 +1,34 @@
 import pandas as pd
-from sklearn.tree import DecisionTreeClassifier
 import pickle
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
 
-# Sample training data
-data = {
-    "age": [25, 45, 65, 30, 55, 70, 40, 50],
-    "heart_rate": [72, 90, 110, 80, 95, 120, 85, 100],
-    "risk": ["Low", "Medium", "High", "Low", "Medium", "High", "Medium", "High"]
-}
+# Load dataset
+data = pd.read_csv("patients.csv")
 
-df = pd.DataFrame(data)
+# Convert RiskLevel text to numbers
+data["RiskLevel"] = data["RiskLevel"].map({
+    "Low": 0,
+    "Medium": 1,
+    "High": 2
+})
 
-X = df[["age", "heart_rate"]]
-y = df["risk"]
+# Select features
+X = data[["Age", "Weight", "HeartRate"]]
 
+# Target variable
+y = data["RiskLevel"]
+
+# Split dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Train model
 model = DecisionTreeClassifier()
-model.fit(X, y)
+model.fit(X_train, y_train)
 
-# Save trained model
+# Save model
 pickle.dump(model, open("risk_model.pkl", "wb"))
 
-print("✅ Model trained and saved as risk_model.pkl")
+print("Model trained successfully!")

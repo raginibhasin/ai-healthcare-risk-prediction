@@ -1,0 +1,21 @@
+ID,Name,Category,Dosage_Form,Strength,Manufacturer,Quantity,Min_Stock_Level,Unit_Price,Expiry_Date,Batch_Number,Description
+1,Paracetamol,Pain Relief,Tablet,500mg,PharmaCorp,150,20,0.50,2025-12-31,BATCH001,Pain and fever relief medication
+2,Ibuprofen,Pain Relief,Tablet,200mg,MediCare,200,25,0.75,2025-10-15,BATCH002,Anti-inflammatory pain reliever
+3,Amoxicillin,Antibiotic,Capsule,250mg,HealthLabs,100,15,2.50,2025-08-20,BATCH003,Broad-spectrum antibiotic
+4,Lisinopril,Cardiovascular,Tablet,10mg,CardioMed,80,10,1.20,2026-01-10,BATCH004,ACE inhibitor for blood pressure
+5,Metformin,Diabetes,Tablet,500mg,DiabCare,120,20,0.80,2025-11-05,BATCH005,Diabetes management medication
+6,Atorvastatin,Cardiovascular,Tablet,20mg,LipidCare,90,12,3.50,2025-09-30,BATCH006,Cholesterol-lowering medication
+7,Omeprazole,Gastrointestinal,Capsule,20mg,GastroMed,110,15,1.80,2026-02-14,BATCH007,Proton pump inhibitor for acid reflux
+8,Amlodipine,Cardiovascular,Tablet,5mg,HeartCare,95,10,1.50,2025-12-22,BATCH008,Calcium channel blocker
+9,Levothyroxine,Thyroid,Hormone,50mcg,ThyroMed,75,8,2.20,2026-03-18,BATCH009,Thyroid hormone replacement
+10,Prednisone,Steroid,Tablet,5mg,SteroidPharm,60,10,1.00,2025-07-25,BATCH010,Corticosteroid anti-inflammatory
+11,Furosemide,Diuretic,Tablet,40mg,KidneyCare,85,12,0.90,2025-11-30,BATCH011,Loop diuretic for edema
+12,Warfarin,Anticoagulant,Tablet,5mg,BloodCare,70,8,4.50,2026-04-12,BATCH012,Blood thinner medication
+13,Albuterol,Respiratory,Inhaler,100mcg,BreathEasy,45,6,15.00,2025-08-08,BATCH013,Bronchodilator for asthma
+14,Citalopram,Antidepressant,Tablet,20mg,MindCare,55,10,2.80,2026-01-28,BATCH014,SSRI antidepressant
+15,Insulin,D diabetes,Injection,100IU/ml,DiabInsulin,30,5,25.00,2025-06-15,BATCH015,Insulin for diabetes management
+16,Hydrochlorothiazide,Diuretic,Tablet,25mg,WaterCare,100,15,0.60,2025-10-10,BATCH016,Thiazide diuretic
+17,Ranitidine,Gastrointestinal,Tablet,150mg,StomachCare,130,20,1.10,2025-12-05,BATCH017,H2 blocker for ulcers
+18,Digoxin,Cardiovascular,Tablet,0.25mg,HeartRhythm,65,8,1.90,2026-02-20,BATCH018,Cardiac glycoside
+19,Clonazepam,Anxiolytic,Tablet,0.5mg,CalmCare,40,6,2.50,2025-09-14,BATCH019,Benzodiazepine for anxiety
+20,Vitamin D3,Vitamin,Tablet,1000IU,VitaHealth,200,30,0.30,2026-05-30,BATCH020,Vitamin D supplement

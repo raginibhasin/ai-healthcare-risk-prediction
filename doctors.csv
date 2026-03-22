@@ -1,0 +1,16 @@
+ID,Name,Specialization,Department,Availability,Contact,Image
+1,Dr. Sarah Ahmed,Cardiologist,Cardiology,Available,9876543210,Doctor-pana.png
+2,Dr. Rahul Mehta,Neurologist,Neurology,Available,9876543211,Doctor-pana.png
+3,Dr. Ananya Sharma,Pediatrician,Pediatrics,Unavailable,9876543212,Doctor-pana.png
+4,Dr. Vikram Kapoor,Orthopedic Surgeon,Orthopedics,Available,9876543213,Doctor-pana.png
+5,Dr. Priya Singh,Gynecologist,Gynecology,Available,9876543214,Doctor-pana.png
+6,Dr. Arjun Patel,Dermatologist,Dermatology,Available,9876543215,Doctor-pana.png
+7,Dr. Meera Joshi,Ophthalmologist,Ophthalmology,Unavailable,9876543216,Doctor-pana.png
+8,Dr. Karan Gupta,Urologist,Urology,Available,9876543217,Doctor-pana.png
+9,Dr. Sunita Rao,Endocrinologist,Endocrinology,Available,9876543218,Doctor-pana.png
+10,Dr. Rajesh Kumar,Psychiatrist,Psychiatry,Available,9876543219,Doctor-pana.png
+11,Dr. Deepa Nair,Radiologist,Radiology,Unavailable,9876543220,Doctor-pana.png
+12,Dr. Amit Sharma,Anesthesiologist,Anesthesiology,Available,9876543221,Doctor-pana.png
+13,Dr. Kavita Menon,Pathologist,Pathology,Available,9876543222,Doctor-pana.png
+14,Dr. Suresh Iyer,General Physician,General Medicine,Available,9876543223,Doctor-pana.png
+15,Dr. Nandini Reddy,Oncologist,Oncology,Unavailable,9876543224,Doctor-pana.png

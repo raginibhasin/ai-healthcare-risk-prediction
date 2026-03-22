@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- ADD MEDICINE HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-plus-circle text-success me-2"></i>Add New Medicine
+        </h1>
+        <p class="text-muted mb-0">Add a new medicine to the inventory with complete details</p>
+    </div>
+    <a href="/medicines" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to Inventory
+    </a>
+</div>
+
+<!-- ADD MEDICINE FORM -->
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body p-4">
+                <form method="POST" action="/add_medicine" class="needs-validation" novalidate>
+
+                    <!-- BASIC INFORMATION -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-info-circle text-primary me-2"></i>Basic Information
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Medicine Name *</label>
+                                <input type="text" name="name" class="form-control" placeholder="Enter medicine name" required>
+                                <div class="invalid-feedback">Please provide a medicine name.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Category *</label>
+                                <select name="category" class="form-select" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Pain Relief">Pain Relief</option>
+                                    <option value="Antibiotic">Antibiotic</option>
+                                    <option value="Cardiovascular">Cardiovascular</option>
+                                    <option value="Diabetes">Diabetes</option>
+                                    <option value="Gastrointestinal">Gastrointestinal</option>
+                                    <option value="Respiratory">Respiratory</option>
+                                    <option value="Vitamin">Vitamin</option>
+                                    <option value="Neurological">Neurological</option>
+                                    <option value="Dermatological">Dermatological</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a category.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Dosage Form *</label>
+                                <select name="dosage_form" class="form-select" required>
+                                    <option value="">Select Dosage Form</option>
+                                    <option value="Tablet">Tablet</option>
+                                    <option value="Capsule">Capsule</option>
+                                    <option value="Syrup">Syrup</option>
+                                    <option value="Injection">Injection</option>
+                                    <option value="Cream">Cream</option>
+                                    <option value="Ointment">Ointment</option>
+                                    <option value="Drops">Drops</option>
+                                    <option value="Inhaler">Inhaler</option>
+                                    <option value="Patch">Patch</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a dosage form.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Strength *</label>
+                                <input type="text" name="strength" class="form-control" placeholder="e.g., 500mg, 10ml, 5%" required>
+                                <div class="invalid-feedback">Please provide the medicine strength.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MANUFACTURER & DESCRIPTION -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-building text-primary me-2"></i>Manufacturer & Description
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Manufacturer *</label>
+                                <input type="text" name="manufacturer" class="form-control" placeholder="Enter manufacturer name" required>
+                                <div class="invalid-feedback">Please provide the manufacturer name.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Batch Number *</label>
+                                <input type="text" name="batch_number" class="form-control" placeholder="Enter batch number" required>
+                                <div class="invalid-feedback">Please provide the batch number.</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Description</label>
+                                <textarea name="description" class="form-control" rows="3" placeholder="Optional description of the medicine"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STOCK & PRICING -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-boxes text-primary me-2"></i>Stock & Pricing Information
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Initial Quantity *</label>
+                                <input type="number" name="quantity" class="form-control" placeholder="0" min="0" required>
+                                <div class="invalid-feedback">Please provide the initial quantity.</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Minimum Stock Level *</label>
+                                <input type="number" name="min_stock_level" class="form-control" placeholder="10" min="0" required>
+                                <div class="invalid-feedback">Please provide the minimum stock level.</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Unit Price ($) *</label>
+                                <input type="number" name="unit_price" class="form-control" placeholder="0.00" step="0.01" min="0" required>
+                                <div class="invalid-feedback">Please provide the unit price.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EXPIRY INFORMATION -->
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-calendar-alt text-primary me-2"></i>Expiry Information
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Expiry Date *</label>
+                                <input type="date" name="expiry_date" class="form-control" required>
+                                <div class="invalid-feedback">Please provide the expiry date.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" id="requires_prescription">
+                                    <label class="form-check-label fw-semibold" for="requires_prescription">
+                                        Requires Prescription
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FORM ACTIONS -->
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a href="/medicines" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i>Add Medicine
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation
+(function () {
+    'use strict'
+
+    var forms = document.querySelectorAll('.needs-validation')
+
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+
+                form.classList.add('was-validated')
+            }, false)
+        })
+})()
+
+// Set minimum expiry date to today
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[name="expiry_date"]').setAttribute('min', today);
+});
+</script>
+
+<style>
+.shadow-custom {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.form-label {
+    color: #495057;
+    font-weight: 600;
+}
+
+.btn {
+    border-radius: 0.375rem;
+}
+
+.card {
+    border-radius: 0.5rem;
+}
+</style>
+
+{% endblock %}

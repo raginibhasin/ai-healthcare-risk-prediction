@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- SYSTEM LOGS HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-file-alt text-primary me-2"></i>System Logs
+        </h1>
+        <p class="text-muted mb-0">Monitor system activity and audit trails</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="exportLogs()">
+            <i class="fas fa-download me-1"></i>Export Logs
+        </button>
+        <button class="btn btn-outline-danger" onclick="clearLogs()">
+            <i class="fas fa-trash me-1"></i>Clear Logs
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- LOG STATISTICS -->
+    <div class="col-12">
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-custom">
+                    <div class="card-body text-center">
+                        <div class="h4 mb-1 text-primary">{{ total_logs }}</div>
+                        <div class="text-muted small">Total Entries</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-custom">
+                    <div class="card-body text-center">
+                        <div class="h4 mb-1 text-info">{{ info_logs }}</div>
+                        <div class="text-muted small">Info Logs</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-custom">
+                    <div class="card-body text-center">
+                        <div class="h4 mb-1 text-warning">{{ warning_logs }}</div>
+                        <div class="text-muted small">Warnings</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-custom">
+                    <div class="card-body text-center">
+                        <div class="h4 mb-1 text-danger">{{ error_logs }}</div>
+                        <div class="text-muted small">Errors</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOG FILTERS -->
+    <div class="col-12">
+        <div class="card border-0 shadow-custom mb-4">
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Log Level</label>
+                        <select class="form-select" id="logLevelFilter">
+                            <option value="">All Levels</option>
+                            <option value="ERROR">Error</option>
+                            <option value="WARNING">Warning</option>
+                            <option value="INFO">Info</option>
+                            <option value="DEBUG">Debug</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Category</label>
+                        <select class="form-select" id="categoryFilter">
+                            <option value="">All Categories</option>
+                            <option value="auth">Authentication</option>
+                            <option value="database">Database</option>
+                            <option value="api">API</option>
+                            <option value="system">System</option>
+                            <option value="user">User Activity</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Date Range</label>
+                        <select class="form-select" id="dateFilter">
+                            <option value="">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">Last 7 days</option>
+                            <option value="month">Last 30 days</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                            <i class="fas fa-times me-1"></i>Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGS TABLE -->
+    <div class="col-12">
+        <div class="card border-0 shadow-custom">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-list text-primary me-2"></i>System Log Entries
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Level</th>
+                                <th>Category</th>
+                                <th>User</th>
+                                <th>Message</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr class="log-entry" data-level="{{ log.level }}" data-category="{{ log.category }}">
+                                <td>
+                                    <small class="text-muted">{{ log.timestamp }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge
+                                        {% if log.level == 'ERROR' %}bg-danger
+                                        {% elif log.level == 'WARNING' %}bg-warning
+                                        {% elif log.level == 'INFO' %}bg-info
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ log.level }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ log.category|title }}</small>
+                                </td>
+                                <td>
+                                    <small>{{ log.user or 'System' }}</small>
+                                </td>
+                                <td>
+                                    <div class="log-message">{{ log.message }}</div>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ log.ip_address or 'N/A' }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            Showing {{ logs|length }} of {{ total_logs }} entries
+                        </small>
+                    </div>
+                    <div class="col-md-6">
+                        <nav aria-label="Log pagination">
+                            <ul class="pagination pagination-sm justify-content-end mb-0">
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" tabindex="-1">Previous</a>
+                                </li>
+                                <li class="page-item active">
+                                    <a class="page-link" href="#">1</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#">2</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#">3</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- LOG DETAILS MODAL -->
+<div class="modal fade" id="logDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-alt me-2"></i>Log Entry Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Timestamp</label>
+                        <p class="mb-0" id="logTimestamp">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Log Level</label>
+                        <p class="mb-0" id="logLevel">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Category</label>
+                        <p class="mb-0" id="logCategory">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">User</label>
+                        <p class="mb-0" id="logUser">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">IP Address</label>
+                        <p class="mb-0" id="logIP">-</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Session ID</label>
+                        <p class="mb-0" id="logSession">-</p>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Message</label>
+                        <div class="border rounded p-3 bg-light" id="logMessage">-</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Stack Trace (if available)</label>
+                        <pre class="border rounded p-3 bg-light small" id="logStackTrace">No stack trace available</pre>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="exportLogEntry()">
+                    <i class="fas fa-download me-1"></i>Export Entry
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Log Management Functions
+function exportLogs() {
+    showAlert('Exporting log data...', 'info');
+}
+
+function clearLogs() {
+    if (confirm('Are you sure you want to clear all logs? This action cannot be undone.')) {
+        showAlert('Logs cleared successfully...', 'warning');
+    }
+}
+
+function clearFilters() {
+    document.getElementById('logLevelFilter').value = '';
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('dateFilter').value = '';
+    filterLogs();
+}
+
+function exportLogEntry() {
+    showAlert('Log entry exported...', 'success');
+}
+
+// Filter functionality
+document.getElementById('logLevelFilter').addEventListener('change', filterLogs);
+document.getElementById('categoryFilter').addEventListener('change', filterLogs);
+document.getElementById('dateFilter').addEventListener('change', filterLogs);
+
+function filterLogs() {
+    const levelFilter = document.getElementById('logLevelFilter').value;
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const dateFilter = document.getElementById('dateFilter').value;
+
+    const rows = document.querySelectorAll('.log-entry');
+
+    rows.forEach(row => {
+        const level = row.dataset.level;
+        const category = row.dataset.category;
+
+        const levelMatch = !levelFilter || level === levelFilter;
+        const categoryMatch = !categoryFilter || category === categoryFilter;
+
+        // Date filtering would require more complex logic with actual timestamps
+        row.style.display = levelMatch && categoryMatch ? '' : 'none';
+    });
+}
+
+// Click on log entry to view details
+document.querySelectorAll('.log-entry').forEach(row => {
+    row.addEventListener('click', function() {
+        // In a real implementation, you'd fetch the full log details
+        document.getElementById('logTimestamp').textContent = this.cells[0].textContent;
+        document.getElementById('logLevel').textContent = this.cells[1].textContent;
+        document.getElementById('logCategory').textContent = this.cells[2].textContent;
+        document.getElementById('logUser').textContent = this.cells[3].textContent;
+        document.getElementById('logIP').textContent = this.cells[5].textContent;
+        document.getElementById('logMessage').innerHTML = this.cells[4].innerHTML;
+        document.getElementById('logSession').textContent = 'sess_' + Math.random().toString(36).substr(2, 9);
+
+        const modal = new bootstrap.Modal(document.getElementById('logDetailsModal'));
+        modal.show();
+    });
+});
+
+// Alert Function
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+// Auto-refresh logs every 30 seconds
+setInterval(() => {
+    // In a real implementation, you'd fetch new logs via AJAX
+    console.log('Checking for new logs...');
+}, 30000);
+</script>
+
+<style>
+.shadow-custom {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.card {
+    border-radius: 0.5rem;
+}
+
+.log-entry:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+.log-message {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+pre {
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+</style>
+
+{% endblock %}

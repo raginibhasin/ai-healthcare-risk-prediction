@@ -1,57 +1,483 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Patients</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+{% extends "base.html" %}
 
-</head>
+{% block content %}
 
-<body style="text-align:center;font-family:Arial">
+<!-- PATIENTS HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-users text-primary me-2"></i>Patient Management
+        </h1>
+        <p class="text-muted mb-0">Comprehensive patient records and care management</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-success" onclick="window.location.href='/register'">
+            <i class="fas fa-user-plus me-1"></i>Add New Patient
+        </button>
+        <button class="btn btn-outline-primary" onclick="window.location.href='/export'">
+            <i class="fas fa-download me-1"></i>Export Data
+        </button>
+    </div>
+</div>
 
-<h2>All Patients</h2>
+<!-- SEARCH AND FILTERS -->
+<div class="card border-0 shadow-custom mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Search Patients</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Name, ID, or condition...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Risk Level</label>
+                <select class="form-select" id="riskFilter">
+                    <option value="">All Risks</option>
+                    <option value="Low">Low Risk</option>
+                    <option value="Medium">Medium Risk</option>
+                    <option value="High">High Risk</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Department</label>
+                <select class="form-select" id="departmentFilter">
+                    <option value="">All Departments</option>
+                    <option value="Cardiology">Cardiology</option>
+                    <option value="Neurology">Neurology</option>
+                    <option value="Internal Medicine">Internal Medicine</option>
+                    <option value="Orthopedics">Orthopedics</option>
+                    <option value="Dermatology">Dermatology</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label fw-semibold">Min Age</label>
+                <input type="number" class="form-control" id="ageMinFilter" placeholder="18">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label fw-semibold">Max Age</label>
+                <input type="number" class="form-control" id="ageMaxFilter" placeholder="100">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Condition</label>
+                <input type="text" class="form-control" id="conditionFilter" placeholder="e.g., Diabetes">
+            </div>
+            <div class="col-md-1">
+                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                    <i class="fas fa-times me-1"></i>Clear
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-<a href="/export">
-<button>Export CSV</button>
-</a>
+<!-- PATIENTS STATS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-primary">{{ patients|length }}</div>
+            <div class="stats-label">Total Patients</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-success">
+                {{ patients|selectattr('8', 'equalto', 'Low')|list|length }}
+            </div>
+            <div class="stats-label">Low Risk</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-warning">
+                {{ patients|selectattr('8', 'equalto', 'Medium')|list|length }}
+            </div>
+            <div class="stats-label">Medium Risk</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-danger">
+                {{ patients|selectattr('8', 'equalto', 'High')|list|length }}
+            </div>
+            <div class="stats-label">High Risk</div>
+        </div>
+    </div>
+</div>
 
-<br><br>
+<!-- PATIENTS TABLE VIEW -->
+<div id="tableViewContainer">
+    <div class="card border-0 shadow-custom">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="patientsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0 fw-semibold">Patient ID</th>
+                            <th class="border-0 fw-semibold">Name</th>
+                            <th class="border-0 fw-semibold">Age/Gender</th>
+                            <th class="border-0 fw-semibold">Vital Signs</th>
+                            <th class="border-0 fw-semibold">Risk Level</th>
+                            <th class="border-0 fw-semibold">Last Visit</th>
+                            <th class="border-0 fw-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in patients %}
+                        <tr class="patient-row" data-risk="{{ p[8] }}" data-name="{{ p[1] }}">
+                            <td>
+                                <span class="fw-semibold text-primary">#{{ p[0] }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-primary-subtle text-primary me-2">
+                                        {{ p[1][0] }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">{{ p[1] }}</div>
+                                        <small class="text-muted">ID: {{ p[0] }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ p[2] }} years</span>
+                                <br>
+                                <small class="text-muted">{{ p[3] }}</small>
+                            </td>
+                            <td>
+                                <div class="vital-signs">
+                                    <span class="badge bg-danger-subtle text-danger">
+                                        <i class="fas fa-heartbeat me-1"></i>{{ p[6] }} bpm
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">BP: {{ p[5] }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                {% if p[8] == 'High' %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>High Risk
+                                    </span>
+                                {% elif p[8] == 'Medium' %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-exclamation-circle me-1"></i>Medium Risk
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Low Risk
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="text-muted">{{ p[9] or '2024-01-15' }}</span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="/patient/{{ p[0] }}" class="btn btn-sm btn-outline-info" title="View Profile">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewPatientTimeline('{{ p[0] }}')" title="View Timeline">
+                                        <i class="fas fa-history"></i>
+                                    </button>
+                                    <a href="/edit/{{ p[0] }}" class="btn btn-sm btn-outline-warning" title="Edit Patient">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deletePatient('{{ p[0] }}', '{{ p[1] }}')" title="Delete Patient">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
-<table class="table table-striped table-bordered">
+<!-- PATIENTS CARD VIEW -->
+<div id="cardViewContainer" style="display: none;">
+    <div class="row g-4">
+        {% for p in patients %}
+        <div class="col-xl-3 col-lg-4 col-md-6 patient-card" data-risk="{{ p[8] }}" data-name="{{ p[1] }}">
+            <div class="card h-100 border-0 shadow-custom patient-card-item">
+                <div class="card-header bg-white border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1 fw-semibold">{{ p[1] }}</h6>
+                            <small class="text-muted">ID: #{{ p[0] }}</small>
+                        </div>
+                        {% if p[8] == 'High' %}
+                            <span class="badge bg-danger">High Risk</span>
+                        {% elif p[8] == 'Medium' %}
+                            <span class="badge bg-warning">Medium Risk</span>
+                        {% else %}
+                            <span class="badge bg-success">Low Risk</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <small class="text-muted d-block">Age</small>
+                            <span class="fw-semibold">{{ p[2] }} years</span>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Gender</small>
+                            <span class="fw-semibold">{{ p[3] }}</span>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Heart Rate</small>
+                            <span class="fw-semibold text-danger">{{ p[6] }} bpm</span>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Blood Pressure</small>
+                            <span class="fw-semibold">{{ p[5] }}</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-outline-primary btn-sm flex-fill" onclick="viewPatientTimeline('{{ p[0] }}')">
+                            <i class="fas fa-history me-1"></i>Timeline
+                        </button>
+                        <a href="/edit/{{ p[0] }}" class="btn btn-outline-warning btn-sm flex-fill">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
 
-<tr>
-<th>ID</th>
-<th>Name</th>
-<th>Age</th>
-<th>Gender</th>
-<th>Heart Rate</th>
-<th>Risk</th>
-<th>Actions</th>
-</tr>
+<!-- PATIENT TIMELINE MODAL -->
+<div class="modal fade" id="patientTimelineModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-history me-2"></i>Patient Medical Timeline
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="timelineContent">
+                    <!-- Timeline content will be loaded here -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">Patient Registration</h6>
+                            <p class="timeline-description">Patient registered in the system with initial assessment.</p>
+                            <small class="timeline-date">2024-01-15 09:30 AM</small>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">Initial Consultation</h6>
+                            <p class="timeline-description">Consultation with Dr. Carter. Vital signs recorded and risk assessment performed.</p>
+                            <small class="timeline-date">2024-01-15 10:00 AM</small>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-warning"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">Risk Assessment Update</h6>
+                            <p class="timeline-description">AI risk assessment updated based on latest vital signs and medical history.</p>
+                            <small class="timeline-date">2024-01-20 02:15 PM</small>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-info"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">Medication Prescribed</h6>
+                            <p class="timeline-description">Paracetamol 500mg prescribed for fever management. Follow-up in 1 week.</p>
+                            <small class="timeline-date">2024-01-22 11:45 AM</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Add New Entry</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-{% for p in patients %}
+<script>
+// Search and Filter Functionality
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('riskFilter').addEventListener('change', applyFilters);
+document.getElementById('departmentFilter').addEventListener('change', applyFilters);
+document.getElementById('ageMinFilter').addEventListener('input', applyFilters);
+document.getElementById('ageMaxFilter').addEventListener('input', applyFilters);
+document.getElementById('conditionFilter').addEventListener('input', applyFilters);
 
-<tr>
+// View Mode Toggle
+document.getElementById('tableView').addEventListener('click', function() {
+    document.getElementById('tableViewContainer').style.display = 'block';
+    document.getElementById('cardViewContainer').style.display = 'none';
+    this.classList.add('active');
+    document.getElementById('cardView').classList.remove('active');
+});
 
-<td>{{p[0]}}</td>
-<td>{{p[1]}}</td>
-<td>{{p[2]}}</td>
-<td>{{p[3]}}</td>
-<td>{{p[6]}}</td>
-<td>{{p[8]}}</td>
+document.getElementById('cardView').addEventListener('click', function() {
+    document.getElementById('tableViewContainer').style.display = 'none';
+    document.getElementById('cardViewContainer').style.display = 'block';
+    this.classList.add('active');
+    document.getElementById('tableView').classList.remove('active');
+});
 
-<td>
-<a href="/edit/{{p[0]}}" class="btn btn-warning btn-sm">Edit</a>
-<a href="/delete/{{p[0]}}" class="btn btn-danger btn-sm">Delete</a>
-</td>
+function applyFilters() {
+    const params = new URLSearchParams();
 
-</tr>
+    const search = document.getElementById('searchInput').value.trim();
+    if (search) params.set('search', search);
 
-{% endfor %}
+    const risk = document.getElementById('riskFilter').value;
+    if (risk) params.set('risk', risk);
 
-</table>
+    const department = document.getElementById('departmentFilter').value;
+    if (department) params.set('department', department);
 
-<br>
+    const ageMin = document.getElementById('ageMinFilter').value;
+    if (ageMin) params.set('age_min', ageMin);
 
-<a href="/">Home</a>
+    const ageMax = document.getElementById('ageMaxFilter').value;
+    if (ageMax) params.set('age_max', ageMax);
 
-</body>
-</html>
+    const condition = document.getElementById('conditionFilter').value.trim();
+    if (condition) params.set('condition', condition);
+
+    const queryString = params.toString();
+    const url = queryString ? `/patients?${queryString}` : '/patients';
+
+    window.location.href = url;
+}
+
+function clearFilters() {
+    window.location.href = '/patients';
+}
+
+function viewPatientTimeline(patientId) {
+    // In a real application, this would fetch patient timeline data
+    const modal = new bootstrap.Modal(document.getElementById('patientTimelineModal'));
+    modal.show();
+}
+
+function deletePatient(id, name) {
+    if (confirm(`Are you sure you want to delete patient "${name}"? This action cannot be undone.`)) {
+        window.location.href = `/delete/${id}`;
+    }
+}
+
+// Initialize filters on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Set filter values from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    document.getElementById('searchInput').value = urlParams.get('search') || '';
+    document.getElementById('riskFilter').value = urlParams.get('risk') || '';
+    document.getElementById('departmentFilter').value = urlParams.get('department') || '';
+    document.getElementById('ageMinFilter').value = urlParams.get('age_min') || '';
+    document.getElementById('ageMaxFilter').value = urlParams.get('age_max') || '';
+    document.getElementById('conditionFilter').value = urlParams.get('condition') || '';
+});
+</script>
+
+<style>
+/* PATIENTS PAGE SPECIFIC STYLES */
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.vital-signs .badge {
+    font-size: 0.75rem;
+}
+
+.patient-card-item {
+    transition: var(--transition);
+}
+
+.patient-card-item:hover {
+    transform: translateY(-2px);
+}
+
+.timeline-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 1rem 0;
+    position: relative;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 40px;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-marker {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.timeline-content {
+    flex-grow: 1;
+}
+
+.timeline-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--dark-color);
+}
+
+.timeline-description {
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.timeline-date {
+    color: #999;
+    font-size: 0.8rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .btn-group {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .btn-group .btn {
+        border-radius: 0.25rem !important;
+    }
+
+    .patient-card-item .btn {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+</style>
+
+{% endblock %}

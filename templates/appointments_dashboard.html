@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- APPOINTMENTS DASHBOARD HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-calendar-check text-primary me-2"></i>Appointments Dashboard
+        </h1>
+        <p class="text-muted mb-0">Manage and track all patient appointments</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/appointment" class="btn btn-success">
+            <i class="fas fa-plus me-1"></i>Book New Appointment
+        </a>
+        <button class="btn btn-outline-primary" onclick="exportAppointments()">
+            <i class="fas fa-download me-1"></i>Export
+        </button>
+    </div>
+</div>
+
+<!-- APPOINTMENT STATISTICS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body text-center">
+                <div class="h3 mb-1 text-primary">{{ appointments|length }}</div>
+                <div class="text-muted">Total Appointments</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body text-center">
+                <div class="h3 mb-1 text-success">{{ appointments|selectattr('Status', 'equalto', 'Scheduled')|list|length }}</div>
+                <div class="text-muted">Scheduled</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body text-center">
+                <div class="h3 mb-1 text-info">{{ appointments|selectattr('Status', 'equalto', 'Completed')|list|length }}</div>
+                <div class="text-muted">Completed</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body text-center">
+                <div class="h3 mb-1 text-warning">{{ appointments|selectattr('Status', 'equalto', 'Cancelled')|list|length }}</div>
+                <div class="text-muted">Cancelled</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SEARCH AND FILTERS -->
+<div class="card border-0 shadow-custom mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Search Appointments</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search by patient or doctor...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Status</label>
+                <select class="form-select" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Date Range</label>
+                <select class="form-select" id="dateFilter">
+                    <option value="">All Dates</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                    <i class="fas fa-times me-1"></i>Clear Filters
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- APPOINTMENTS TABLE -->
+<div class="card border-0 shadow-custom">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="appointmentsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th class="border-0 fw-semibold">Appointment Details</th>
+                        <th class="border-0 fw-semibold">Patient Info</th>
+                        <th class="border-0 fw-semibold">Doctor</th>
+                        <th class="border-0 fw-semibold">Schedule</th>
+                        <th class="border-0 fw-semibold">Status</th>
+                        <th class="border-0 fw-semibold">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in appointments %}
+                    <tr class="appointment-row" data-patient="{{ appointment.Patient|lower }}" data-doctor="{{ appointment.Doctor|lower }}" data-status="{{ appointment.Status }}">
+                        <td>
+                            <div class="fw-semibold">#{{ appointment.ID }}</div>
+                            <small class="text-muted">{{ appointment.Reason|truncate(50) }}</small>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="patient-avatar me-3">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; font-size: 0.8rem;">
+                                        {{ appointment.Patient[0] }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">{{ appointment.Patient }}</div>
+                                    {% if appointment.Phone %}
+                                    <small class="text-muted">{{ appointment.Phone }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold">{{ appointment.Doctor }}</div>
+                            <small class="text-muted">Healthcare Professional</small>
+                        </td>
+                        <td>
+                            <div class="fw-semibold">{{ appointment.Date }}</div>
+                            <small class="text-muted">{{ appointment.Time }}</small>
+                        </td>
+                        <td>
+                            <span class="badge
+                                {% if appointment.Status == 'Scheduled' %}bg-success
+                                {% elif appointment.Status == 'Completed' %}bg-info
+                                {% elif appointment.Status == 'Cancelled' %}bg-danger
+                                {% else %}bg-secondary{% endif %}">
+                                {{ appointment.Status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewAppointment({{ appointment.ID }})" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% if appointment.Status == 'Scheduled' %}
+                                <button class="btn btn-sm btn-outline-success" onclick="completeAppointment({{ appointment.ID }})" title="Mark Complete">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="cancelAppointment({{ appointment.ID }})" title="Cancel">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- NO APPOINTMENTS MESSAGE -->
+{% if not appointments %}
+<div class="text-center py-5">
+    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+    <h4 class="text-muted">No Appointments Found</h4>
+    <p class="text-muted">There are no appointments scheduled yet.</p>
+    <a href="/appointment" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>Book First Appointment
+    </a>
+</div>
+{% endif %}
+
+<script>
+// Search and Filter Functionality
+document.getElementById('searchInput').addEventListener('input', filterAppointments);
+document.getElementById('statusFilter').addEventListener('change', filterAppointments);
+document.getElementById('dateFilter').addEventListener('change', filterAppointments);
+
+function filterAppointments() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const dateFilter = document.getElementById('dateFilter').value;
+
+    const rows = document.querySelectorAll('.appointment-row');
+
+    rows.forEach(row => {
+        const patient = row.dataset.patient;
+        const doctor = row.dataset.doctor;
+        const status = row.dataset.status;
+
+        const matchesSearch = patient.includes(searchTerm) || doctor.includes(searchTerm);
+        const matchesStatus = !statusFilter || status === statusFilter;
+
+        // Date filtering would need more complex implementation
+        const matchesDate = !dateFilter || true; // Simplified for now
+
+        if (matchesSearch && matchesStatus && matchesDate) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function viewAppointment(appointmentId) {
+    // In a real application, this would show detailed appointment information
+    alert('Appointment details view - to be implemented');
+}
+
+function completeAppointment(appointmentId) {
+    if (confirm('Mark this appointment as completed?')) {
+        // Implement status update functionality
+        alert('Complete functionality - to be implemented');
+    }
+}
+
+function cancelAppointment(appointmentId) {
+    if (confirm('Are you sure you want to cancel this appointment?')) {
+        // Implement cancellation functionality
+        alert('Cancel functionality - to be implemented');
+    }
+}
+
+function exportAppointments() {
+    window.location.href = '/export_appointments';
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('dateFilter').value = '';
+    filterAppointments();
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    filterAppointments();
+});
+</script>
+
+<style>
+.shadow-custom {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.appointment-row:hover {
+    background-color: #f8f9fa;
+}
+
+.patient-avatar {
+    flex-shrink: 0;
+}
+
+.card {
+    border-radius: 0.5rem;
+}
+</style>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+{% endblock %}

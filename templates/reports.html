@@ -1,0 +1,684 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- REPORTS HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-file-alt text-primary me-2"></i>Reports & Analytics
+        </h1>
+        <p class="text-muted mb-0">Generate comprehensive reports for hospital operations</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="exportAllReports()">
+            <i class="fas fa-download me-1"></i>Export All
+        </button>
+        <button class="btn btn-success" onclick="generateReport()">
+            <i class="fas fa-plus me-1"></i>Generate Report
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- REPORT CATEGORIES -->
+    <div class="col-lg-3">
+        <div class="card border-0 shadow-custom">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-list text-primary me-2"></i>Report Categories
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action active" onclick="showReportType('patient')">
+                        <i class="fas fa-users me-2"></i>Patient Reports
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="showReportType('appointment')">
+                        <i class="fas fa-calendar-check me-2"></i>Appointment Reports
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="showReportType('doctor')">
+                        <i class="fas fa-user-md me-2"></i>Doctor Performance
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="showReportType('risk')">
+                        <i class="fas fa-chart-line me-2"></i>Risk Assessment
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="showReportType('financial')">
+                        <i class="fas fa-dollar-sign me-2"></i>Financial Reports
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="showReportType('inventory')">
+                        <i class="fas fa-pills me-2"></i>Inventory Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REPORT CONTENT -->
+    <div class="col-lg-9">
+
+        <!-- PATIENT REPORTS -->
+        <div id="patient-reports" class="report-section">
+            <div class="card border-0 shadow-custom mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users text-primary me-2"></i>Patient Reports
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="generatePatientReport()">
+                        <i class="fas fa-file-pdf me-1"></i>Generate PDF
+                    </button>
+                </div>
+                <div class="card-body">
+
+                    <!-- PATIENT STATISTICS -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white text-center">
+                                <div class="card-body py-3">
+                                    <div class="h4 mb-1">1,247</div>
+                                    <div class="small">Total Patients</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white text-center">
+                                <div class="card-body py-3">
+                                    <div class="h4 mb-1">892</div>
+                                    <div class="small">Active Patients</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white text-center">
+                                <div class="card-body py-3">
+                                    <div class="h4 mb-1">156</div>
+                                    <div class="small">New This Month</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white text-center">
+                                <div class="card-body py-3">
+                                    <div class="h4 mb-1">45</div>
+                                    <div class="small">High Risk</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PATIENT DEMOGRAPHICS CHART -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Patient Demographics</h6>
+                        <canvas id="patientDemographicsChart" height="200"></canvas>
+                    </div>
+
+                    <!-- TOP CONDITIONS -->
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3">Top Medical Conditions</h6>
+                            <div class="list-group">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    Hypertension
+                                    <span class="badge bg-primary rounded-pill">234</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    Diabetes
+                                    <span class="badge bg-primary rounded-pill">189</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    Heart Disease
+                                    <span class="badge bg-primary rounded-pill">156</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    Respiratory Issues
+                                    <span class="badge bg-primary rounded-pill">98</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    Arthritis
+                                    <span class="badge bg-primary rounded-pill">87</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3">Age Distribution</h6>
+                            <canvas id="ageDistributionChart" height="200"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- APPOINTMENT REPORTS -->
+        <div id="appointment-reports" class="report-section" style="display: none;">
+            <div class="card border-0 shadow-custom mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-check text-primary me-2"></i>Appointment Reports
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="generateAppointmentReport()">
+                        <i class="fas fa-file-pdf me-1"></i>Generate PDF
+                    </button>
+                </div>
+                <div class="card-body">
+
+                    <!-- APPOINTMENT STATISTICS -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white text-center">
+                                <div class="card-body py-3">
+                                    <div class="h4 mb-1">3,421</div>
+                                    <div class="small">Total Appointments</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white text-center">
+                                <div class="card-body py-3">
+                                    <div class="h4 mb-1">2,856</div>
+                                    <div class="small">Completed</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white text-center">
+                                <div class="card-body py-3">
+                                    <div class="h4 mb-1">387</div>
+                                    <div class="small">Scheduled</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-danger text-white text-center">
+                                <div class="card-body py-3">
+                                    <div class="h4 mb-1">178</div>
+                                    <div class="small">Cancelled</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- APPOINTMENT TRENDS -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Appointment Trends (Last 6 Months)</h6>
+                        <canvas id="appointmentTrendsChart" height="200"></canvas>
+                    </div>
+
+                    <!-- DEPARTMENT BREAKDOWN -->
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3">Appointments by Department</h6>
+                            <canvas id="departmentBreakdownChart" height="200"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3">Peak Hours Analysis</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Time Slot</th>
+                                            <th>Avg Appointments</th>
+                                            <th>Utilization %</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>9:00 - 10:00</td>
+                                            <td>12</td>
+                                            <td><span class="badge bg-success">85%</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>10:00 - 11:00</td>
+                                            <td>15</td>
+                                            <td><span class="badge bg-success">95%</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>14:00 - 15:00</td>
+                                            <td>8</td>
+                                            <td><span class="badge bg-warning">60%</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- DOCTOR PERFORMANCE -->
+        <div id="doctor-reports" class="report-section" style="display: none;">
+            <div class="card border-0 shadow-custom mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-md text-primary me-2"></i>Doctor Performance Reports
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="generateDoctorReport()">
+                        <i class="fas fa-file-pdf me-1"></i>Generate PDF
+                    </button>
+                </div>
+                <div class="card-body">
+
+                    <!-- TOP PERFORMERS -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Top Performing Doctors</h6>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Doctor</th>
+                                        <th>Specialization</th>
+                                        <th>Appointments</th>
+                                        <th>Patient Satisfaction</th>
+                                        <th>Rating</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px; font-size: 0.8rem;">
+                                                    SM
+                                                </div>
+                                                Dr. Sarah Mitchell
+                                            </div>
+                                        </td>
+                                        <td>Cardiology</td>
+                                        <td>245</td>
+                                        <td>98%</td>
+                                        <td>
+                                            <div class="text-warning">
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star-half-alt"></i>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px; font-size: 0.8rem;">
+                                                    RJ
+                                                </div>
+                                                Dr. Robert Johnson
+                                            </div>
+                                        </td>
+                                        <td>Neurology</td>
+                                        <td>198</td>
+                                        <td>96%</td>
+                                        <td>
+                                            <div class="text-warning">
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- PERFORMANCE METRICS -->
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3">Average Consultation Time</h6>
+                            <canvas id="consultationTimeChart" height="200"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold mb-3">Patient Wait Times</h6>
+                            <canvas id="waitTimeChart" height="200"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- FINANCIAL REPORTS -->
+        <div id="financial-reports" class="report-section" style="display: none;">
+            <div class="card border-0 shadow-custom mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-dollar-sign text-primary me-2"></i>Financial Reports
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="generateFinancialReport()">
+                        <i class="fas fa-file-pdf me-1"></i>Generate PDF
+                    </button>
+                </div>
+                <div class="card-body">
+
+                    <!-- FINANCIAL OVERVIEW -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white text-center">
+                                <div class="card-body py-3">
+                                    <div class="h4 mb-1">$2.4M</div>
+                                    <div class="small">Monthly Revenue</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white text-center">
+                                <div class="card-body py-3">
+                                    <div class="h4 mb-1">$187K</div>
+                                    <div class="small">Operating Costs</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white text-center">
+                                <div class="card-body py-3">
+                                    <div class="h4 mb-1">$89K</div>
+                                    <div class="small">Insurance Claims</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white text-center">
+                                <div class="card-body py-3">
+                                    <div class="h4 mb-1">23.4%</div>
+                                    <div class="small">Profit Margin</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REVENUE BREAKDOWN -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Revenue Breakdown</h6>
+                        <canvas id="revenueBreakdownChart" height="200"></canvas>
+                    </div>
+
+                    <!-- MONTHLY TRENDS -->
+                    <div class="row g-4">
+                        <div class="col-md-8">
+                            <h6 class="fw-bold mb-3">Revenue Trends</h6>
+                            <canvas id="revenueTrendsChart" height="250"></canvas>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="fw-bold mb-3">Cost Analysis</h6>
+                            <div class="list-group">
+                                <div class="list-group-item d-flex justify-content-between">
+                                    Staff Salaries
+                                    <strong>$98K</strong>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between">
+                                    Medical Supplies
+                                    <strong>$45K</strong>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between">
+                                    Equipment Maintenance
+                                    <strong>$23K</strong>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between">
+                                    Utilities
+                                    <strong>$12K</strong>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between">
+                                    Insurance
+                                    <strong>$9K</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- PLACEHOLDER FOR OTHER REPORTS -->
+        <div id="risk-reports" class="report-section" style="display: none;">
+            <div class="card border-0 shadow-custom">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Risk Assessment Reports</h5>
+                    <p class="text-muted">Detailed risk analysis reports coming soon...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="inventory-reports" class="report-section" style="display: none;">
+            <div class="card border-0 shadow-custom">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-pills fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Inventory Reports</h5>
+                    <p class="text-muted">Medicine inventory and usage reports coming soon...</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Report Type Switching
+function showReportType(type) {
+    // Hide all report sections
+    document.querySelectorAll('.report-section').forEach(section => {
+        section.style.display = 'none';
+    });
+
+    // Remove active class from all nav items
+    document.querySelectorAll('.list-group-item').forEach(item => {
+        item.classList.remove('active');
+    });
+
+    // Show selected report section
+    document.getElementById(type + '-reports').style.display = 'block';
+
+    // Add active class to clicked item
+    event.target.classList.add('active');
+}
+
+// Generate Report Functions
+function generatePatientReport() {
+    showAlert('Generating Patient Report...', 'info');
+}
+
+function generateAppointmentReport() {
+    showAlert('Generating Appointment Report...', 'info');
+}
+
+function generateDoctorReport() {
+    showAlert('Generating Doctor Performance Report...', 'info');
+}
+
+function generateFinancialReport() {
+    showAlert('Generating Financial Report...', 'info');
+}
+
+function exportAllReports() {
+    showAlert('Exporting all reports...', 'info');
+}
+
+function generateReport() {
+    showAlert('Generating custom report...', 'info');
+}
+
+// Initialize Charts
+document.addEventListener('DOMContentLoaded', function() {
+    // Patient Demographics Chart
+    const patientCtx = document.getElementById('patientDemographicsChart');
+    if (patientCtx) {
+        new Chart(patientCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['18-30', '31-50', '51-70', '70+'],
+                datasets: [{
+                    data: [245, 456, 387, 159],
+                    backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    // Age Distribution Chart
+    const ageCtx = document.getElementById('ageDistributionChart');
+    if (ageCtx) {
+        new Chart(ageCtx, {
+            type: 'bar',
+            data: {
+                labels: ['0-18', '19-35', '36-50', '51-65', '65+'],
+                datasets: [{
+                    label: 'Patients',
+                    data: [89, 234, 345, 298, 281],
+                    backgroundColor: '#007bff'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // Appointment Trends Chart
+    const appointmentCtx = document.getElementById('appointmentTrendsChart');
+    if (appointmentCtx) {
+        new Chart(appointmentCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Appointments',
+                    data: [420, 380, 510, 480, 590, 520],
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // Department Breakdown Chart
+    const deptCtx = document.getElementById('departmentBreakdownChart');
+    if (deptCtx) {
+        new Chart(deptCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Cardiology', 'Neurology', 'Orthopedics', 'General Medicine', 'Pediatrics'],
+                datasets: [{
+                    data: [234, 189, 156, 298, 167],
+                    backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    // Revenue Breakdown Chart
+    const revenueCtx = document.getElementById('revenueBreakdownChart');
+    if (revenueCtx) {
+        new Chart(revenueCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Consultations', 'Procedures', 'Insurance', 'Self-pay'],
+                datasets: [{
+                    data: [45, 30, 20, 5],
+                    backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    // Revenue Trends Chart
+    const revenueTrendCtx = document.getElementById('revenueTrendsChart');
+    if (revenueTrendCtx) {
+        new Chart(revenueTrendCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Revenue ($K)',
+                    data: [2100, 1950, 2400, 2300, 2650, 2400],
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+});
+
+// Alert Function
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+</script>
+
+<style>
+.shadow-custom {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.card {
+    border-radius: 0.5rem;
+}
+
+.report-section {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.list-group-item.active {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+</style>
+
+{% endblock %}

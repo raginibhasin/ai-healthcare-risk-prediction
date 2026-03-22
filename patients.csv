@@ -1,0 +1,11 @@
+ID,Name,Age,Gender,Weight,BloodPressure,HeartRate,Conditions,RiskLevel,Date
+1,Ragini Bhasin,21,Female,76,128/76,65,Cold,Low,2026-02-21
+2,Aman Sharma,45,Male,82,135/85,95,Hypertension,Medium,2026-02-22
+3,Priya Singh,52,Female,70,150/90,105,Diabetes,High,2026-02-22
+4,Rahul Verma,33,Male,68,118/75,72,None,Low,2026-02-23
+5,Neha Kapoor,60,Female,80,160/100,110,Heart Disease,High,2026-02-23
+6,Arjun Mehta,48,Male,85,140/88,98,Diabetes,Medium,2026-02-24
+7,Sneha Gupta,29,Female,55,110/70,68,None,Low,2026-02-24
+8,Karan Malhotra,50,Male,90,145/90,100,Hypertension,High,2026-02-25
+9,Ritu Arora,40,Female,72,130/82,88,None,Medium,2026-02-25
+10,Vikram Sethi,37,Male,78,125/80,85,None,Low,2026-02-26

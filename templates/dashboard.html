@@ -1,56 +1,494 @@
-<!DOCTYPE html>
-<html>
-<head>
+{% extends "base.html" %}
 
-<title>Patient Dashboard</title>
+{% block content %}
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-</head>
-
-<body class="bg-light">
-
-<!-- Navbar -->
-
-<nav class="navbar navbar-dark bg-primary">
-<div class="container">
-<span class="navbar-brand mb-0 h1">🏥 AI Healthcare Dashboard</span>
-</div>
-</nav>
-
-
-<div class="container mt-5">
-
-<h2 class="text-center mb-5">Patient Risk Analytics</h2>
-
-<div class="row text-center">
-
-<div class="col-md-3">
-<div class="card bg-primary text-white p-3">
-<h4>Total</h4>
-<h2>{{total}}</h2>
-</div>
+<!-- DASHBOARD HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-tachometer-alt text-primary me-2"></i>Dashboard Overview
+        </h1>
+        <p class="text-muted mb-0">Real-time hospital management insights</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary">
+            <i class="fas fa-download me-1"></i>Export Report
+        </button>
+        <button class="btn btn-primary">
+            <i class="fas fa-refresh me-1"></i>Refresh Data
+        </button>
+    </div>
 </div>
 
-<div class="col-md-3">
-<div class="card bg-danger text-white p-3">
-<h4>High Risk</h4>
-<h2>{{high}}</h2>
-</div>
+<!-- KPI CARDS ROW -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100 border-0 shadow-custom">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Patients</h6>
+                        <h3 class="mb-0">{{ total_patients or 15420 }}</h3>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>+12% this month
+                        </small>
+                    </div>
+                    <div class="avatar bg-primary-subtle text-primary">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100 border-0 shadow-custom">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">Active Appointments</h6>
+                        <h3 class="mb-0">{{ total_appointments or 247 }}</h3>
+                        <small class="text-warning">
+                            <i class="fas fa-clock me-1"></i>8 pending today
+                        </small>
+                    </div>
+                    <div class="avatar bg-success-subtle text-success">
+                        <i class="fas fa-calendar-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100 border-0 shadow-custom">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">High Risk Patients</h6>
+                        <h3 class="mb-0 text-danger">{{ high_risk or 23 }}</h3>
+                        <small class="text-danger">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Requires attention
+                        </small>
+                    </div>
+                    <div class="avatar bg-danger-subtle text-danger">
+                        <i class="fas fa-exclamation-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100 border-0 shadow-custom">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">Medical Staff</h6>
+                        <h3 class="mb-0">{{ total_doctors or 45 }}</h3>
+                        <small class="text-info">
+                            <i class="fas fa-user-md me-1"></i>32 on duty
+                        </small>
+                    </div>
+                    <div class="avatar bg-info-subtle text-info">
+                        <i class="fas fa-user-md fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="col-md-3">
-<div class="card bg-warning text-white p-3">
-<h4>Medium Risk</h4>
-<h2>{{medium}}</h2>
-</div>
+<!-- CHARTS ROW -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-8">
+        <div class="card border-0 shadow-custom">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line text-primary me-2"></i>Patient Risk Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="riskChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="card border-0 shadow-custom">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-alt text-success me-2"></i>Today's Appointments
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="appointment-timeline">
+                    <div class="appointment-item completed">
+                        <div class="time">09:00</div>
+                        <div class="details">
+                            <div class="patient">John Smith</div>
+                            <small class="doctor">Dr. Carter - Cardiology</small>
+                        </div>
+                        <div class="status">
+                            <span class="badge bg-success">Completed</span>
+                        </div>
+                    </div>
+                    <div class="appointment-item current">
+                        <div class="time">10:30</div>
+                        <div class="details">
+                            <div class="patient">Sarah Johnson</div>
+                            <small class="doctor">Dr. Lee - Neurology</small>
+                        </div>
+                        <div class="status">
+                            <span class="badge bg-primary">In Progress</span>
+                        </div>
+                    </div>
+                    <div class="appointment-item upcoming">
+                        <div class="time">14:00</div>
+                        <div class="details">
+                            <div class="patient">Mike Davis</div>
+                            <small class="doctor">Dr. Adams - Internal Med</small>
+                        </div>
+                        <div class="status">
+                            <span class="badge bg-warning">Upcoming</span>
+                        </div>
+                    </div>
+                    <div class="appointment-item upcoming">
+                        <div class="time">15:30</div>
+                        <div class="details">
+                            <div class="patient">Emma Wilson</div>
+                            <small class="doctor">Dr. Carter - Cardiology</small>
+                        </div>
+                        <div class="status">
+                            <span class="badge bg-warning">Upcoming</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="col-md-3">
-<div class="card bg-success text-white p-3">
-<h4>Low Risk</h4>
-<h2>{{low}}</h2>
-</div>
+<!-- ALERTS & QUICK ACTIONS ROW -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-6">
+        <div class="card border-0 shadow-custom">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-bell text-warning me-2"></i>Critical Alerts
+                </h5>
+                <span class="badge bg-danger">3 Active</span>
+            </div>
+            <div class="card-body">
+                <div class="alert-item critical">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-exclamation-triangle text-danger me-3 mt-1"></i>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Patient #123 - Critical Condition</h6>
+                            <p class="mb-1 text-muted small">Blood pressure dropping rapidly. Requires immediate intervention.</p>
+                            <small class="text-danger">2 minutes ago</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger">Respond</button>
+                    </div>
+                </div>
+                <div class="alert-item warning">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-exclamation-circle text-warning me-3 mt-1"></i>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Medicine Stock Low</h6>
+                            <p class="mb-1 text-muted small">Paracetamol inventory below threshold (5 units remaining).</p>
+                            <small class="text-warning">15 minutes ago</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-warning">Order</button>
+                    </div>
+                </div>
+                <div class="alert-item info">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-info-circle text-info me-3 mt-1"></i>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Staff Shift Change</h6>
+                            <p class="mb-1 text-muted small">Dr. Lee ending shift in 30 minutes. Coverage needed.</p>
+                            <small class="text-info">1 hour ago</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-info">Assign</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="card border-0 shadow-custom">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt text-primary me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <button class="btn btn-outline-primary w-100 p-3 quick-action-btn">
+                            <i class="fas fa-user-plus fa-2x mb-2"></i>
+                            <div>New Patient</div>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-outline-success w-100 p-3 quick-action-btn">
+                            <i class="fas fa-calendar-plus fa-2x mb-2"></i>
+                            <div>Book Appointment</div>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-outline-info w-100 p-3 quick-action-btn">
+                            <i class="fas fa-file-medical fa-2x mb-2"></i>
+                            <div>Medical Report</div>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-outline-warning w-100 p-3 quick-action-btn">
+                            <i class="fas fa-pills fa-2x mb-2"></i>
+                            <div>Medicine Inventory</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
+<!-- RECENT ACTIVITY -->
+<div class="card border-0 shadow-custom">
+    <div class="card-header bg-white border-0">
+        <h5 class="mb-0">
+            <i class="fas fa-history text-secondary me-2"></i>Recent Activity
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="activity-timeline">
+            <div class="activity-item">
+                <div class="activity-icon bg-success">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">Patient Registration</div>
+                    <div class="activity-description">New patient Sarah Johnson registered successfully</div>
+                    <small class="activity-time">5 minutes ago</small>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon bg-primary">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">Appointment Completed</div>
+                    <div class="activity-description">Dr. Carter completed consultation with John Smith</div>
+                    <small class="activity-time">12 minutes ago</small>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon bg-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">Risk Assessment Alert</div>
+                    <div class="activity-description">Patient #456 risk level changed to High</div>
+                    <small class="activity-time">18 minutes ago</small>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon bg-info">
+                    <i class="fas fa-pills"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">Medicine Dispensed</div>
+                    <div class="activity-description">Paracetamol prescribed to Emma Wilson</div>
+                    <small class="activity-time">25 minutes ago</small>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- CHART.JS SCRIPT -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Risk Distribution Chart
+const ctx = document.getElementById('riskChart').getContext('2d');
+const riskChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+        datasets: [{
+            data: [{{ low_risk or 120 }}, {{ medium_risk or 45 }}, {{ high_risk or 23 }}],
+            backgroundColor: [
+                'rgba(40, 167, 69, 0.8)',
+                'rgba(255, 193, 7, 0.8)',
+                'rgba(220, 53, 69, 0.8)'
+            ],
+            borderColor: [
+                'rgba(40, 167, 69, 1)',
+                'rgba(255, 193, 7, 1)',
+                'rgba(220, 53, 69, 1)'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    usePointStyle: true
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((context.parsed / total) * 100).toFixed(1);
+                        return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Auto-refresh data every 30 seconds
+setInterval(function() {
+    // In a real application, this would fetch new data from the server
+    console.log('Refreshing dashboard data...');
+}, 30000);
+</script>
+
+<style>
+/* DASHBOARD SPECIFIC STYLES */
+.avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.appointment-timeline {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.appointment-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.appointment-item:last-child {
+    border-bottom: none;
+}
+
+.appointment-item .time {
+    font-weight: 600;
+    color: var(--primary-color);
+    min-width: 60px;
+}
+
+.appointment-item .details {
+    flex-grow: 1;
+    margin: 0 1rem;
+}
+
+.appointment-item .patient {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.appointment-item .doctor {
+    color: #666;
+}
+
+.alert-item {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    border-left: 4px solid;
+}
+
+.alert-item.critical {
+    background: rgba(220, 53, 69, 0.05);
+    border-left-color: var(--danger-color);
+}
+
+.alert-item.warning {
+    background: rgba(255, 193, 7, 0.05);
+    border-left-color: var(--warning-color);
+}
+
+.alert-item.info {
+    background: rgba(23, 162, 184, 0.05);
+    border-left-color: var(--secondary-color);
+}
+
+.quick-action-btn {
+    height: auto;
+    transition: var(--transition);
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.activity-timeline {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 1rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.activity-content {
+    flex-grow: 1;
+}
+
+.activity-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.activity-description {
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.activity-time {
+    color: #999;
+    font-size: 0.8rem;
+}
+</style>
+
+{% endblock %}

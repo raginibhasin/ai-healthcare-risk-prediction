@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- RISK DASHBOARD HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-chart-bar text-primary me-2"></i>Risk Assessment Dashboard
+        </h1>
+        <p class="text-muted mb-0">Comprehensive overview of patient risk levels and health analytics</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/risk" class="btn btn-success">
+            <i class="fas fa-plus me-1"></i>New Assessment
+        </a>
+        <button class="btn btn-outline-primary" onclick="exportData()">
+            <i class="fas fa-download me-1"></i>Export Report
+        </button>
+    </div>
+</div>
+
+<!-- STATISTICS CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body text-center">
+                <div class="stats-icon mb-2">
+                    <i class="fas fa-users fa-2x text-primary"></i>
+                </div>
+                <div class="h4 mb-1 text-primary">{{ total }}</div>
+                <div class="text-muted small">Total Patients</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body text-center">
+                <div class="stats-icon mb-2">
+                    <i class="fas fa-shield-alt fa-2x text-success"></i>
+                </div>
+                <div class="h4 mb-1 text-success">{{ low }}</div>
+                <div class="text-muted small">Low Risk</div>
+                <div class="progress mt-2" style="height: 4px;">
+                    <div class="progress-bar bg-success" style="width: {{ (low / total * 100)|round }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body text-center">
+                <div class="stats-icon mb-2">
+                    <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                </div>
+                <div class="h4 mb-1 text-warning">{{ medium }}</div>
+                <div class="text-muted small">Medium Risk</div>
+                <div class="progress mt-2" style="height: 4px;">
+                    <div class="progress-bar bg-warning" style="width: {{ (medium / total * 100)|round }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body text-center">
+                <div class="stats-icon mb-2">
+                    <i class="fas fa-exclamation-circle fa-2x text-danger"></i>
+                </div>
+                <div class="h4 mb-1 text-danger">{{ high }}</div>
+                <div class="text-muted small">High Risk</div>
+                <div class="progress mt-2" style="height: 4px;">
+                    <div class="progress-bar bg-danger" style="width: {{ (high / total * 100)|round }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CHARTS ROW -->
+<div class="row g-4 mb-4">
+    <!-- RISK DISTRIBUTION CHART -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-custom h-100">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-pie text-primary me-2"></i>Risk Level Distribution
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="riskChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- RISK TRENDS CHART -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-custom h-100">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-line text-primary me-2"></i>Risk Assessment Trends
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="trendChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DETAILED BREAKDOWN -->
+<div class="row g-4">
+    <!-- HIGH RISK PATIENTS -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-custom">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-exclamation-circle text-danger me-2"></i>High Risk Patients
+                </h6>
+                <span class="badge bg-danger">{{ high }}</span>
+            </div>
+            <div class="card-body">
+                {% if high > 0 %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>{{ high }} patients</strong> require immediate attention and monitoring.
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Priority Actions:</small>
+                    <ul class="list-unstyled mt-2">
+                        <li><i class="fas fa-check-circle text-success me-2"></i>Schedule immediate consultations</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i>Monitor vital signs closely</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i>Review treatment plans</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i>Consider specialist referrals</li>
+                    </ul>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                    <h6 class="text-success">Excellent!</h6>
+                    <p class="text-muted mb-0">No patients currently classified as high risk.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- RISK INSIGHTS -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-custom">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb text-primary me-2"></i>Risk Assessment Insights
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="insights-list">
+                    <div class="insight-item mb-3">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-chart-line text-primary me-3 mt-1"></i>
+                            <div>
+                                <h6 class="mb-1">Risk Distribution</h6>
+                                <p class="text-muted small mb-0">
+                                    {% if total > 0 %}
+                                    {{ ((low / total) * 100)|round(1) }}% low risk,
+                                    {{ ((medium / total) * 100)|round(1) }}% medium risk,
+                                    {{ ((high / total) * 100)|round(1) }}% high risk
+                                    {% else %}
+                                    No assessments completed yet
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="insight-item mb-3">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-users text-info me-3 mt-1"></i>
+                            <div>
+                                <h6 class="mb-1">Patient Coverage</h6>
+                                <p class="text-muted small mb-0">
+                                    {{ total }} patients assessed out of total patient database
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="insight-item">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-clock text-warning me-3 mt-1"></i>
+                            <div>
+                                <h6 class="mb-1">Assessment Frequency</h6>
+                                <p class="text-muted small mb-0">
+                                    Regular risk assessments recommended every 3-6 months
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EXPORT & ACTIONS -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6 class="mb-1">Generate Comprehensive Report</h6>
+                        <p class="text-muted small mb-0">Export detailed risk assessment reports for administrative review</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-primary me-2" onclick="generateReport()">
+                            <i class="fas fa-file-pdf me-1"></i>Generate PDF Report
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="exportData()">
+                            <i class="fas fa-download me-1"></i>Export Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Risk Distribution Chart
+const riskCtx = document.getElementById('riskChart').getContext('2d');
+const riskChart = new Chart(riskCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+        datasets: [{
+            data: [{{ low }}, {{ medium }}, {{ high }}],
+            backgroundColor: [
+                '#28a745', // success
+                '#ffc107', // warning
+                '#dc3545'  // danger
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Trend Chart (Mock data - in real app, this would come from historical data)
+const trendCtx = document.getElementById('trendChart').getContext('2d');
+const trendChart = new Chart(trendCtx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+            label: 'High Risk',
+            data: [12, 15, {{ high }}, 8, 6, 4],
+            borderColor: '#dc3545',
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'Medium Risk',
+            data: [25, 28, {{ medium }}, 22, 18, 15],
+            borderColor: '#ffc107',
+            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'Low Risk',
+            data: [45, 42, {{ low }}, 48, 52, 55],
+            borderColor: '#28a745',
+            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+function generateReport() {
+    alert('PDF report generation - to be implemented');
+}
+
+function exportData() {
+    window.location.href = '/export_risk_data';
+}
+</script>
+
+<style>
+.shadow-custom {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.stats-icon {
+    opacity: 0.8;
+}
+
+.insight-item {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: #f8f9fa;
+}
+
+.insight-item h6 {
+    color: #495057;
+    font-weight: 600;
+}
+
+.card {
+    border-radius: 0.5rem;
+}
+
+.progress {
+    background-color: #e9ecef;
+}
+</style>
+
+<h5>Medium Risk</h5>
+<h2 class="text-warning">{{ medium }}</h2>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card text-center shadow p-4 border-success">
+<h5>Low Risk</h5>
+<h2 class="text-success">{{ low }}</h2>
+</div>
+</div>
+
+</div>
+
+<!-- Risk Distribution Chart -->
+
+<div class="row mt-5">
+
+<div class="col-md-8 mx-auto">
+
+<div class="card shadow p-4">
+
+<h4 class="text-center mb-4">Patient Risk Distribution</h4>
+
+<canvas id="riskChart"> </canvas>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- Chart Script (IMPORTANT: must be at bottom) -->
+
+<script>
+
+const ctx = document.getElementById('riskChart');
+
+new Chart(ctx, {
+type: 'pie',
+data: {
+labels: ['High Risk', 'Medium Risk', 'Low Risk'],
+datasets: [{
+data: [{{ high }}, {{ medium }}, {{ low }}],
+backgroundColor: [
+'#dc3545',
+'#ffc107',
+'#28a745'
+]
+}]
+},
+options: {
+responsive: true,
+plugins: {
+legend: {
+position: 'bottom'
+}
+}
+}
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- DOCTORS HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-user-md text-primary me-2"></i>Medical Specialists
+        </h1>
+        <p class="text-muted mb-0">Our team of experienced healthcare professionals</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-success" onclick="window.location.href='/add_doctor'">
+            <i class="fas fa-user-plus me-1"></i>Add Doctor
+        </button>
+        <button class="btn btn-outline-primary" onclick="window.location.href='/export_doctors'">
+            <i class="fas fa-download me-1"></i>Export Data
+        </button>
+    </div>
+</div>
+
+<!-- SEARCH AND FILTERS -->
+<div class="card border-0 shadow-custom mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Search Doctors</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search by name or specialization...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Specialization</label>
+                <select class="form-select" id="specializationFilter">
+                    <option value="">All Specializations</option>
+                    <option value="Cardiologist">Cardiologist</option>
+                    <option value="Neurologist">Neurologist</option>
+                    <option value="Pediatrician">Pediatrician</option>
+                    <option value="Orthopedic Surgeon">Orthopedic Surgeon</option>
+                    <option value="Gynecologist">Gynecologist</option>
+                    <option value="Dermatologist">Dermatologist</option>
+                    <option value="Ophthalmologist">Ophthalmologist</option>
+                    <option value="Urologist">Urologist</option>
+                    <option value="Endocrinologist">Endocrinologist</option>
+                    <option value="Psychiatrist">Psychiatrist</option>
+                    <option value="Radiologist">Radiologist</option>
+                    <option value="Anesthesiologist">Anesthesiologist</option>
+                    <option value="Pathologist">Pathologist</option>
+                    <option value="General Physician">General Physician</option>
+                    <option value="Oncologist">Oncologist</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Availability</label>
+                <select class="form-select" id="availabilityFilter">
+                    <option value="">All Status</option>
+                    <option value="Available">Available</option>
+                    <option value="Unavailable">Unavailable</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                    <i class="fas fa-times me-1"></i>Clear Filters
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DOCTORS STATS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stats-card">
+            <div class="stats-number text-primary">{{ doctors|length }}</div>
+            <div class="stats-label">Total Doctors</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stats-card">
+            <div class="stats-number text-success">
+                {{ doctors|selectattr('Availability', 'equalto', 'Available')|list|length }}
+            </div>
+            <div class="stats-label">Available Now</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stats-card">
+            <div class="stats-number text-info">
+                {{ doctors|length }}
+            </div>
+            <div class="stats-label">Total Specialists</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4" id="doctorsContainer">
+{% for doctor in doctors %}
+<div class="col-xl-3 col-lg-4 col-md-6 doctor-card" data-name="{{ doctor.Name|lower }}" data-specialization="{{ doctor.Specialization }}" data-availability="{{ doctor.Availability }}">
+    <div class="card h-100 border-0 shadow-custom">
+        <div class="card-body text-center p-4">
+            <img src="{{ url_for('static', filename='images/' + doctor.Image) }}"
+                class="rounded-circle mx-auto d-block mb-3"
+                style="width:120px;height:120px;object-fit:cover;border:4px solid #f8f9fa;"
+                alt="{{ doctor.Name }}">
+
+            <h5 class="card-title fw-bold mb-2">{{ doctor.Name }}</h5>
+
+            <p class="text-primary fw-semibold mb-1">{{ doctor.Specialization }}</p>
+
+            <div class="mb-3">
+                <span class="badge bg-light text-dark me-2">
+                    <i class="fas fa-building me-1"></i>{{ doctor.Department }}
+                </span>
+                <br>
+                <span class="badge
+                    {% if doctor.Availability == 'Available' %}bg-success
+                    {% else %}bg-warning{% endif %} mt-2">
+                    <i class="fas fa-circle me-1"></i>{{ doctor.Availability }}
+                </span>
+            </div>
+
+            <div class="text-muted small mb-3">
+                <i class="fas fa-phone me-1"></i>{{ doctor.Contact }}
+            </div>
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary flex-fill" onclick="bookAppointment('{{ doctor.ID }}', '{{ doctor.Name }}')">
+                    <i class="fas fa-calendar-plus me-1"></i>Book
+                </button>
+                <button class="btn btn-outline-info flex-fill" onclick="viewProfile('{{ doctor.ID }}')">
+                    <i class="fas fa-eye me-1"></i>Profile
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+</div>
+
+<!-- NO RESULTS MESSAGE -->
+<div id="noResults" class="text-center py-5" style="display: none;">
+    <i class="fas fa-user-md fa-3x text-muted mb-3"></i>
+    <h4 class="text-muted">No doctors found</h4>
+    <p class="text-muted">Try adjusting your search criteria</p>
+</div>
+
+<script>
+// Search and Filter Functionality
+document.getElementById('searchInput').addEventListener('input', filterDoctors);
+document.getElementById('specializationFilter').addEventListener('change', filterDoctors);
+document.getElementById('availabilityFilter').addEventListener('change', filterDoctors);
+
+function filterDoctors() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const specializationFilter = document.getElementById('specializationFilter').value;
+    const availabilityFilter = document.getElementById('availabilityFilter').value;
+
+    const doctorCards = document.querySelectorAll('.doctor-card');
+    let visibleCount = 0;
+
+    doctorCards.forEach(card => {
+        const name = card.dataset.name;
+        const specialization = card.dataset.specialization;
+        const availability = card.dataset.availability;
+
+        const matchesSearch = name.includes(searchTerm) || specialization.toLowerCase().includes(searchTerm);
+        const matchesSpecialization = !specializationFilter || specialization === specializationFilter;
+        const matchesAvailability = !availabilityFilter || availability === availabilityFilter;
+
+        if (matchesSearch && matchesSpecialization && matchesAvailability) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Show/hide no results message
+    document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('specializationFilter').value = '';
+    document.getElementById('availabilityFilter').value = '';
+    filterDoctors();
+}
+
+function bookAppointment(doctorId, doctorName) {
+    // Redirect to appointment booking with doctor pre-selected
+    window.location.href = `/appointment?doctor=${doctorId}`;
+}
+
+function viewProfile(doctorId) {
+    // Redirect to doctor profile page
+    window.location.href = `/doctor/${doctorId}`;
+}
+
+// Initialize filters on page load
+document.addEventListener('DOMContentLoaded', function() {
+    filterDoctors();
+});
+</script>
+
+<style>
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.stats-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.stats-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.doctor-card {
+    transition: var(--transition);
+}
+
+.doctor-card:hover {
+    transform: translateY(-5px);
+}
+</style>
+
+{% endblock %}
