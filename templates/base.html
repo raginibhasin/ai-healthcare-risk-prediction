@@ -79,12 +79,14 @@
                     </a>
                 </li>
 
+                {% if current_user.is_authenticated and current_user.role == 'admin' %}
                 <!-- ADMIN -->
                 <li class="nav-item">
                     <a class="nav-link px-3" href="/admin">
                         <i class="fas fa-user-shield me-1"></i>Admin
                     </a>
                 </li>
+                {% endif %}
 
                 <!-- MORE DROPDOWN -->
                 <li class="nav-item dropdown">
@@ -98,9 +100,11 @@
                             <i class="fas fa-calendar-alt me-2"></i>Appointments Dashboard</a></li>
                         <li><a class="dropdown-item" href="/risk-dashboard">
                             <i class="fas fa-chart-bar me-2"></i>Risk Dashboard</a></li>
+                        {% if current_user.is_authenticated and current_user.role == 'admin' %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/settings">
                             <i class="fas fa-cog me-2"></i>Settings</a></li>
+                        {% endif %}
                         <li><a class="dropdown-item" href="/reports">
                             <i class="fas fa-file-alt me-2"></i>Reports</a></li>
                     </ul>
@@ -172,16 +176,24 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle px-2" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-user-circle fa-lg"></i>
+                        {% if current_user.is_authenticated %}
+                        <span class="d-none d-lg-inline ms-1">{{ current_user.name }}</span>
+                        {% endif %}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow">
-                        <li><h6 class="dropdown-header">Admin User</h6></li>
+                        {% if current_user.is_authenticated %}
+                        <li><h6 class="dropdown-header">{{ current_user.name }}</h6></li>
                         <li><a class="dropdown-item" href="#">
                             <i class="fas fa-user me-2"></i>Profile</a></li>
                         <li><a class="dropdown-item" href="#">
                             <i class="fas fa-cog me-2"></i>Settings</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="#">
+                        <li><a class="dropdown-item text-danger" href="/logout">
                             <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        {% else %}
+                        <li><a class="dropdown-item" href="/login">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login</a></li>
+                        {% endif %}
                     </ul>
                 </li>
 

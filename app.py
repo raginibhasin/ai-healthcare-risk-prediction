@@ -3,19 +3,70 @@ import numpy as np
 import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-from flask import Flask, render_template, request, redirect, url_for, Response
+from flask import Flask, render_template, request, redirect, url_for, Response, flash
 import sqlite3
 from datetime import datetime
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from post_login import PostLoginHandler
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'  # Change this to a secure key
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
 model = pickle.load(open("risk_model.pkl", "rb"))
 
-# ---------------- DATABASE ---------------- #
+# User class
+class User(UserMixin):
+    def __init__(self, id, name, email, role, department, username=None):
+        self.id = id
+        self.name = name
+        self.email = email
+        self.role = role
+        self.department = department
+        self.username = username
+
+# Mock users database
+users = {
+    "admin": User(1, "John Admin", "admin@hospital.com", "admin", "administration", "admin"),
+    "doctor": User(2, "Dr. Sarah Mitchell", "doctor@hospital.com", "doctor", "cardiology", "doctor"),
+    "patient": User(3, "Patient User", "patient@hospital.com", "patient", "general", "patient")
+}
+
+@login_manager.user_loader
+def load_user(user_id):
+    # First check mock users
+    for user in users.values():
+        if user.id == int(user_id):
+            return user
+    # Then check db
+    conn = sqlite3.connect("hospital.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, email, role, department, username FROM users WHERE id = ?", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return User(row[0], row[1], row[2], row[3], row[4], row[5])
+    return None
 
 def init_db():
     conn = sqlite3.connect("hospital.db")
     cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            email TEXT UNIQUE,
+            password TEXT,
+            role TEXT,
+            name TEXT,
+            department TEXT,
+            created_at TEXT
+        )
+    """)
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS patients (
@@ -53,7 +104,78 @@ def init_db():
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
+
+
+# ---------------- LOGIN ---------------- #
+
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        role = request.form['role']
+        user = None
+        if username in users and password == 'password' and users[username].role == role:
+            user = users[username]
+        else:
+            # Check db
+            conn = sqlite3.connect("hospital.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, name, email, role, department, username FROM users WHERE username = ? AND password = ? AND role = ?", (username, password, role))
+            row = cursor.fetchone()
+            conn.close()
+            if row:
+                user = User(row[0], row[1], row[2], row[3], row[4], row[5])
+        if user:
+            login_user(user)
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('dashboard'))
+        else:
+            flash('Invalid credentials or role mismatch')
+    return render_template("login.html")
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
+
+
+# ---------------- USER REGISTER ---------------- #
+
+@app.route("/user_register", methods=['GET', 'POST'])
+@login_required
+def user_register():
+    if current_user.role != 'admin':
+        return redirect(url_for('dashboard'))
+    # ... rest of the code
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        name = request.form['name']
+        password = request.form['password']
+        role = request.form['role']
+        department = request.form.get('department', '')
+
+        conn = sqlite3.connect("hospital.db")
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO users (username, email, password, role, name, department, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (username, email, password, role, name, department, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            conn.commit()
+            flash('Registration successful! Please log in.')
+            return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
+            flash('Username or email already exists.')
+        finally:
+            conn.close()
+    return render_template("user_register.html")
 
 
 # ---------------- REGISTER PAGE ---------------- #
@@ -106,6 +228,7 @@ def submit_patient():
 # ---------------- VIEW PATIENTS ---------------- #
 
 @app.route("/patients")
+@login_required
 def patients():
 
     conn = sqlite3.connect("hospital.db")
@@ -279,8 +402,15 @@ def export():
     )
 
 @app.route("/dashboard")
+@login_required
 def dashboard():
-
+    if current_user.role == 'admin':
+        return redirect(url_for('admin_dashboard'))
+    elif current_user.role == 'doctor':
+        return redirect(url_for('doctors'))
+    elif current_user.role == 'patient':
+        return redirect(url_for('patients'))
+    # Default dashboard
     conn = sqlite3.connect("hospital.db")
     cursor = conn.cursor()
 
@@ -624,7 +754,10 @@ def export_risk_data():
     )
 
 @app.route("/settings")
+@login_required
 def settings():
+    if current_user.role != 'admin':
+        return redirect(url_for('dashboard'))
     return render_template("settings.html")
 
 @app.route("/reports")
@@ -632,26 +765,76 @@ def reports():
     return render_template("reports.html")
 
 @app.route("/admin")
+@login_required
 def admin_dashboard():
-    # Mock data for admin dashboard
-    return render_template("admin_dashboard.html",
-                         total_users=45,
-                         active_doctors=12,
-                         today_appointments=23,
-                         system_load=67,
-                         last_backup="2 hours ago",
-                         uptime="5 days, 3 hours")
+    if current_user.role != 'admin':
+        return redirect(url_for('dashboard'))
+    handler = PostLoginHandler()
+    data = handler.get_dashboard_data()
+    return render_template("admin_dashboard.html", **data)
 
-@app.route("/admin/users")
+@app.route("/admin/users", methods=['GET', 'POST'])
+@login_required
 def admin_users():
-    # Mock user data
-    users = [
-        {"id": 1, "name": "Dr. Sarah Mitchell", "email": "sarah.mitchell@hospital.com", "role": "doctor", "department": "cardiology", "status": "active", "last_login": "2024-01-15 09:30"},
-        {"id": 2, "name": "John Admin", "email": "john.admin@hospital.com", "role": "admin", "department": "administration", "status": "active", "last_login": "2024-01-15 08:15"},
-        {"id": 3, "name": "Dr. Robert Johnson", "email": "robert.johnson@hospital.com", "role": "doctor", "department": "neurology", "status": "active", "last_login": "2024-01-15 10:45"},
-        {"id": 4, "name": "Mary Nurse", "email": "mary.nurse@hospital.com", "role": "nurse", "department": "general", "status": "inactive", "last_login": "2024-01-10 14:20"},
-        {"id": 5, "name": "Tom Staff", "email": "tom.staff@hospital.com", "role": "staff", "department": "administration", "status": "active", "last_login": "2024-01-15 11:00"}
+    if current_user.role != 'admin':
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        name = request.form['name']
+        password = request.form['password']
+        role = request.form['role']
+        department = request.form.get('department', '')
+
+        conn = sqlite3.connect("hospital.db")
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO users (username, email, password, role, name, department, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (username, email, password, role, name, department, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            conn.commit()
+            flash('User added successfully!')
+        except sqlite3.IntegrityError:
+            flash('Username or email already exists.')
+        finally:
+            conn.close()
+        return redirect(url_for('admin_users'))
+    
+    conn = sqlite3.connect("hospital.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, username, name, email, role, department, created_at FROM users")
+    db_users = cursor.fetchall()
+    conn.close()
+    
+    # Convert to dict format
+    users = []
+    for row in db_users:
+        users.append({
+            "id": row[0],
+            "username": row[1],
+            "name": row[2],
+            "email": row[3],
+            "role": row[4],
+            "department": row[5],
+            "status": "active",  # Assume active for now
+            "last_login": "N/A"  # Not tracking yet
+        })
+    
+    # Add mock users that are not in db
+    mock_users = [
+        {"id": 1, "username": "admin", "name": "John Admin", "email": "admin@hospital.com", "role": "admin", "department": "administration", "status": "active", "last_login": "2024-01-15 08:15"},
+        {"id": 2, "username": "doctor", "name": "Dr. Sarah Mitchell", "email": "doctor@hospital.com", "role": "doctor", "department": "cardiology", "status": "active", "last_login": "2024-01-15 09:30"},
+        {"id": 3, "username": "patient", "name": "Patient User", "email": "patient@hospital.com", "role": "patient", "department": "general", "status": "active", "last_login": "2024-01-15 10:00"}
     ]
+    
+    # Filter out mock users that are already in db
+    existing_usernames = {u["username"] for u in users}
+    for mock in mock_users:
+        if mock["username"] not in existing_usernames:
+            users.append(mock)
+    
     return render_template("admin_users.html",
                          users=users,
                          total_users=len(users),

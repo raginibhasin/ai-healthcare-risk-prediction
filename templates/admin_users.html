@@ -20,6 +20,15 @@
     </div>
 </div>
 
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ messages[0] }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endif %}
+{% endwith %}
+
 <div class="row g-4">
 
     <!-- USER STATISTICS -->
@@ -172,52 +181,38 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="addUserForm">
+            <form id="addUserForm" method="POST" action="{{ url_for('admin_users') }}">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
+                            <label class="form-label fw-semibold">Username</label>
+                            <input type="text" class="form-control" name="username" required>
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label fw-semibold">Full Name</label>
-                            <input type="text" class="form-control" id="userName" required>
+                            <input type="text" class="form-control" name="name" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Email Address</label>
-                            <input type="email" class="form-control" id="userEmail" required>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Password</label>
+                            <input type="password" class="form-control" name="password" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Role</label>
-                            <select class="form-select" id="userRole" required>
+                            <select class="form-select" name="role" required>
                                 <option value="">Select Role</option>
                                 <option value="admin">Administrator</option>
                                 <option value="doctor">Doctor</option>
-                                <option value="nurse">Nurse</option>
-                                <option value="staff">Staff</option>
+                                <option value="patient">Patient</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Department</label>
-                            <select class="form-select" id="userDepartment">
-                                <option value="">Select Department</option>
-                                <option value="cardiology">Cardiology</option>
-                                <option value="neurology">Neurology</option>
-                                <option value="orthopedics">Orthopedics</option>
-                                <option value="general">General Medicine</option>
-                                <option value="pediatrics">Pediatrics</option>
-                                <option value="administration">Administration</option>
-                            </select>
+                            <input type="text" class="form-control" name="department" placeholder="Optional">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Phone Number</label>
-                            <input type="tel" class="form-control" id="userPhone">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Employee ID</label>
-                            <input type="text" class="form-control" id="employeeId">
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="sendWelcomeEmail" checked>
-                                <label class="form-check-label">
-                                    Send welcome email with login credentials
                                 </label>
                             </div>
                         </div>
@@ -258,30 +253,30 @@ function exportUsers() {
     showAlert('Exporting user data...', 'info');
 }
 
-// Form submission
-document.getElementById('addUserForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+// Form submission - removed since we use POST now
+// document.getElementById('addUserForm').addEventListener('submit', function(e) {
+//     e.preventDefault();
 
-    const userData = {
-        name: document.getElementById('userName').value,
-        email: document.getElementById('userEmail').value,
-        role: document.getElementById('userRole').value,
-        department: document.getElementById('userDepartment').value,
-        phone: document.getElementById('userPhone').value,
-        employeeId: document.getElementById('employeeId').value,
-        sendWelcomeEmail: document.getElementById('sendWelcomeEmail').checked
-    };
+//     const userData = {
+//         name: document.getElementById('userName').value,
+//         email: document.getElementById('userEmail').value,
+//         role: document.getElementById('userRole').value,
+//         department: document.getElementById('userDepartment').value,
+//         phone: document.getElementById('userPhone').value,
+//         employeeId: document.getElementById('employeeId').value,
+//         sendWelcomeEmail: document.getElementById('sendWelcomeEmail').checked
+//     };
 
-    // Here you would send the data to the server
-    console.log('Creating user:', userData);
+//     // Here you would send the data to the server
+//     console.log('Creating user:', userData);
 
-    showAlert('User created successfully!', 'success');
+//     showAlert('User created successfully!', 'success');
 
-    // Close modal and reset form
-    const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
-    modal.hide();
-    this.reset();
-});
+//     // Close modal and reset form
+//     const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+//     modal.hide();
+//     this.reset();
+// });
 
 // Filter functionality
 document.getElementById('roleFilter').addEventListener('change', filterUsers);

@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid login-container">
+    <div class="row min-vh-100">
+        <!-- Left Side - Branding -->
+        <div class="col-lg-6 login-left d-none d-lg-flex align-items-center justify-content-center">
+            <div class="text-center text-white">
+                <div class="mb-4">
+                    <i class="fas fa-heartbeat fa-4x text-warning"></i>
+                </div>
+                <h1 class="display-4 fw-bold mb-3">Healthcare Management</h1>
+                <p class="lead mb-4">Advanced AI-powered healthcare solutions for better patient outcomes</p>
+                <div class="features-list">
+                    <div class="feature-item">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        <span>Secure & Compliant</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-brain me-2"></i>
+                        <span>AI Risk Assessment</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-users me-2"></i>
+                        <span>Team Collaboration</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Login Form -->
+        <div class="col-lg-6 col-md-12 login-right d-flex align-items-center justify-content-center">
+            <div class="login-form-container">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-dark">Welcome Back</h2>
+                    <p class="text-muted">Sign in to your account</p>
+                </div>
+
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ messages[0] }}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST" class="login-form">
+                    <div class="mb-3">
+                        <label for="username" class="form-label fw-semibold">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" class="form-control form-control-lg" id="username" name="username" required
+                                   placeholder="Enter your username">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label fw-semibold">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" class="form-control form-control-lg" id="password" name="password" required
+                                   placeholder="Enter your password">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="role" class="form-label fw-semibold">Role</label>
+                        <select class="form-select form-select-lg" id="role" name="role" required>
+                            <option value="">Select your role</option>
+                            <option value="admin">Admin</option>
+                            <option value="doctor">Doctor</option>
+                            <option value="patient">Patient</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="remember">
+                            <label class="form-check-label" for="remember">
+                                Remember me
+                            </label>
+                        </div>
+                        <a href="#" class="text-decoration-none">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                        <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                    </button>
+                </form>
+
+                <!-- Demo Credentials -->
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h6 class="text-muted mb-2">Demo Credentials:</h6>
+                    <small class="text-muted">
+                        <strong>Admin:</strong> admin / password<br>
+                        <strong>Doctor:</strong> doctor / password<br>
+                        <strong>Patient:</strong> patient / password
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.login-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.login-left {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+    backdrop-filter: blur(10px);
+}
+
+.login-right {
+    background: white;
+}
+
+.login-form-container {
+    max-width: 400px;
+    width: 100%;
+    padding: 2rem;
+}
+
+.login-form .form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.login-form .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.login-form .input-group-text {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-right: none;
+    color: #6c757d;
+}
+
+.login-form .form-control:focus + .input-group-text,
+.login-form .input-group-text:focus {
+    border-color: #667eea;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.features-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
+}
+
+@media (max-width: 991.98px) {
+    .login-container {
+        background: white;
+    }
+
+    .login-left {
+        display: none !important;
+    }
+
+    .login-right {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .login-form-container {
+        color: white;
+    }
+
+    .text-muted {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    .bg-light {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: white;
+    }
+}
+</style>
+{% endblock %}
