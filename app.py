@@ -5,16 +5,38 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 from flask import Flask, render_template, request, redirect, url_for, Response, flash
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SelectField, SubmitField
+from wtforms.validators import DataRequired, Email, Length
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_principal import Principal, identity_loaded, UserNeed, RoleNeed
 from post_login import PostLoginHandler
+from auth_utils import hash_password, check_password
+from permissions import require_role
+from logging_config import security_logger
+from models import EncryptedPatient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'  # Change this to a secure key
+app.secret_key = os.getenv('SECRET_KEY', 'fallback_secret_key')
+app.config['WTF_CSRF_ENABLED'] = True
+
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+principals = Principal(app)
 
 model = pickle.load(open("risk_model.pkl", "rb"))
 
@@ -28,11 +50,12 @@ class User(UserMixin):
         self.department = department
         self.username = username
 
-# Mock users database
+# Mock users database (with hashed passwords for demo)
 users = {
     "admin": User(1, "John Admin", "admin@hospital.com", "admin", "administration", "admin"),
     "doctor": User(2, "Dr. Sarah Mitchell", "doctor@hospital.com", "doctor", "cardiology", "doctor"),
-    "patient": User(3, "Patient User", "patient@hospital.com", "patient", "general", "patient")
+    "patient": User(3, "Patient User", "patient@hospital.com", "patient", "general", "patient"),
+    "staff": User(4, "Staff User", "staff@hospital.com", "staff", "support", "staff")
 }
 
 @login_manager.user_loader
@@ -60,11 +83,13 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
             email TEXT UNIQUE,
-            password TEXT,
+            password_hash TEXT,
             role TEXT,
             name TEXT,
             department TEXT,
-            created_at TEXT
+            created_at TEXT,
+            failed_attempts INTEGER DEFAULT 0,
+            locked_until TEXT
         )
     """)
 
@@ -75,9 +100,9 @@ def init_db():
             age INTEGER,
             gender TEXT,
             weight REAL,
-            blood_pressure TEXT,
+            blood_pressure_encrypted TEXT,
             heart_rate INTEGER,
-            existing_conditions TEXT,
+            existing_conditions_encrypted TEXT,
             risk_level TEXT,
             registration_date TEXT,
             department TEXT
@@ -90,17 +115,54 @@ def init_db():
             patient_id INTEGER,
             date TEXT,
             type TEXT,
-            notes TEXT,
+            notes_encrypted TEXT,
             doctor TEXT,
             FOREIGN KEY (patient_id) REFERENCES patients (patient_id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS activity_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            action TEXT,
+            timestamp TEXT,
+            details TEXT
         )
     """)
 
     conn.commit()
     conn.close()
 
+@identity_loaded.connect_via(app)
+def on_identity_loaded(sender, identity):
+    identity.user = current_user
 
-# ---------------- HOME ---------------- #
+    if hasattr(current_user, 'id'):
+        identity.provides.add(UserNeed(current_user.id))
+
+    if hasattr(current_user, 'role'):
+        identity.provides.add(RoleNeed(current_user.role))
+
+
+class RegisterForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=3)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    name = StringField('Full Name', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
+    role = SelectField('Role', choices=[('admin', 'Admin'), ('doctor', 'Doctor'), ('patient', 'Patient'), ('staff', 'Staff')], validators=[DataRequired()])
+    department = StringField('Department')
+    submit = SubmitField('Register')
+
+
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    role = SelectField('Role', choices=[('admin', 'Admin'), ('doctor', 'Doctor'), ('patient', 'Patient'), ('staff', 'Staff')], validators=[DataRequired()])
+    submit = SubmitField('Sign In')
+
+
+# ---------------- USER REGISTER ---------------- #
 
 @app.route("/")
 def home():
@@ -112,35 +174,66 @@ def home():
 # ---------------- LOGIN ---------------- #
 
 @app.route("/login", methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        role = request.form['role']
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        role = form.role.data
         user = None
-        if username in users and password == 'password' and users[username].role == role:
+
+        # Check mock users (with hashed check for demo)
+        if username in users and check_password(password, hash_password('password')) and users[username].role == role:
             user = users[username]
         else:
             # Check db
             conn = sqlite3.connect("hospital.db")
             cursor = conn.cursor()
-            cursor.execute("SELECT id, name, email, role, department, username FROM users WHERE username = ? AND password = ? AND role = ?", (username, password, role))
+            cursor.execute("SELECT id, name, email, role, department, username, password_hash, failed_attempts, locked_until FROM users WHERE username = ?", (username,))
             row = cursor.fetchone()
             conn.close()
             if row:
-                user = User(row[0], row[1], row[2], row[3], row[4], row[5])
+                user_id, name, email, db_role, department, db_username, password_hash, failed_attempts, locked_until = row
+                if locked_until and datetime.now() < datetime.fromisoformat(locked_until):
+                    flash('Account locked due to too many failed attempts.')
+                    security_logger.info(f"Login attempt on locked account: {username}")
+                    return render_template("login.html", form=form)
+                if check_password(password, password_hash) and db_role == role:
+                    user = User(user_id, name, email, db_role, department, db_username)
+                    # Reset failed attempts
+                    conn = sqlite3.connect("hospital.db")
+                    cursor = conn.cursor()
+                    cursor.execute("UPDATE users SET failed_attempts = 0 WHERE id = ?", (user_id,))
+                    conn.commit()
+                    conn.close()
+                    security_logger.info(f"Successful login: {username} ({role})")
+                else:
+                    # Increment failed attempts
+                    failed_attempts += 1
+                    locked_until = None
+                    if failed_attempts >= 5:
+                        locked_until = (datetime.now() + timedelta(minutes=15)).isoformat()
+                    conn = sqlite3.connect("hospital.db")
+                    cursor = conn.cursor()
+                    cursor.execute("UPDATE users SET failed_attempts = ?, locked_until = ? WHERE id = ?", (failed_attempts, locked_until, user_id))
+                    conn.commit()
+                    conn.close()
+                    security_logger.warning(f"Failed login attempt: {username} (attempt {failed_attempts})")
+
         if user:
             login_user(user)
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('dashboard'))
         else:
             flash('Invalid credentials or role mismatch')
-    return render_template("login.html")
+    return render_template("login.html", form=form)
 
 
 @app.route("/logout")
 @login_required
 def logout():
+    security_logger.info(f"Logout: {current_user.username} ({current_user.role})")
     logout_user()
     return redirect(url_for('home'))
 
@@ -149,33 +242,33 @@ def logout():
 
 @app.route("/user_register", methods=['GET', 'POST'])
 @login_required
+@require_role('admin')
 def user_register():
-    if current_user.role != 'admin':
-        return redirect(url_for('dashboard'))
-    # ... rest of the code
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        name = request.form['name']
-        password = request.form['password']
-        role = request.form['role']
-        department = request.form.get('department', '')
+    form = RegisterForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        email = form.email.data
+        name = form.name.data
+        password = hash_password(form.password.data)
+        role = form.role.data
+        department = form.department.data or ''
 
         conn = sqlite3.connect("hospital.db")
         cursor = conn.cursor()
         try:
             cursor.execute("""
-                INSERT INTO users (username, email, password, role, name, department, created_at)
+                INSERT INTO users (username, email, password_hash, role, name, department, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (username, email, password, role, name, department, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
             conn.commit()
             flash('Registration successful! Please log in.')
+            security_logger.info(f"User registered: {username} ({role}) by {current_user.username}")
             return redirect(url_for('login'))
         except sqlite3.IntegrityError:
             flash('Username or email already exists.')
         finally:
             conn.close()
-    return render_template("user_register.html")
+    return render_template("user_register.html", form=form)
 
 
 # ---------------- REGISTER PAGE ---------------- #
@@ -210,17 +303,23 @@ def submit_patient():
 
     date = datetime.now().strftime("%Y-%m-%d")
 
+    # Encrypt sensitive data
+    from models import EncryptedPatient
+    encrypted_data = EncryptedPatient.encrypt_row(name, age, gender, weight, blood_pressure, heart_rate, existing_conditions, risk_level, date, department)
+
     conn = sqlite3.connect("hospital.db")
     cursor = conn.cursor()
 
     cursor.execute("""
         INSERT INTO patients
-        (name, age, gender, weight, blood_pressure, heart_rate, existing_conditions, risk_level, registration_date, department)
+        (name, age, gender, weight, blood_pressure_encrypted, heart_rate, existing_conditions_encrypted, risk_level, registration_date, department)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (name, age, gender, weight, blood_pressure, heart_rate, existing_conditions, risk_level, date, department))
+    """, encrypted_data)
 
     conn.commit()
     conn.close()
+
+    security_logger.info(f"Patient registered: {name} by {current_user.username}")
 
     return redirect("/patients")
 
@@ -269,16 +368,23 @@ def patients():
         params.extend([f"%{search}%", f"%{search}%"])
 
     cursor.execute(query, params)
-    data = cursor.fetchall()
+    rows = cursor.fetchall()
 
     conn.close()
 
-    return render_template("patients.html", patients=data)
+    # Decrypt and create patient objects
+    patients_list = [EncryptedPatient(row) for row in rows]
+
+    security_logger.info(f"Patients viewed by {current_user.username} ({current_user.role})")
+
+    return render_template("patients.html", patients=patients_list)
 
 
 # ---------------- DELETE ---------------- #
 
 @app.route("/delete/<int:id>")
+@login_required
+@require_role('admin')
 def delete_patient(id):
 
     conn = sqlite3.connect("hospital.db")
@@ -288,6 +394,8 @@ def delete_patient(id):
     conn.commit()
 
     conn.close()
+
+    security_logger.warning(f"Patient deleted: ID {id} by {current_user.username}")
 
     return redirect("/patients")
 
@@ -404,47 +512,16 @@ def export():
 @app.route("/dashboard")
 @login_required
 def dashboard():
+    handler = PostLoginHandler()
+    data = handler.get_dashboard_data()
     if current_user.role == 'admin':
-        return redirect(url_for('admin_dashboard'))
+        return render_template("admin_dashboard.html", **data)
     elif current_user.role == 'doctor':
-        return redirect(url_for('doctors'))
+        return render_template("doctors.html", **data)  # or doctor_dashboard if exists
     elif current_user.role == 'patient':
-        return redirect(url_for('patients'))
-    # Default dashboard
-    conn = sqlite3.connect("hospital.db")
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT COUNT(*) FROM patients")
-    total = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(*) FROM patients WHERE risk_level='High'")
-    high = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(*) FROM patients WHERE risk_level='Medium'")
-    medium = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(*) FROM patients WHERE risk_level='Low'")
-    low = cursor.fetchone()[0]
-
-    # Get appointments count
-    cursor.execute("SELECT COUNT(*) FROM appointments")
-    total_appointments = cursor.fetchone()[0]
-
-    # Get doctors count
-    cursor.execute("SELECT COUNT(*) FROM doctors")
-    total_doctors = cursor.fetchone()[0]
-
-    conn.close()
-
-    return render_template(
-        "dashboard.html",
-        total_patients=total,
-        high_risk=high,
-        medium_risk=medium,
-        low_risk=low,
-        total_appointments=total_appointments,
-        total_doctors=total_doctors
-    )
+        return render_template("patient_profile.html", **data)  # or patient_dashboard
+    else:
+        return render_template("dashboard.html", **data)
 
 @app.route("/")
 def dashboard_page():

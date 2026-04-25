@@ -6,6 +6,7 @@ import sqlite3
 from datetime import datetime
 from flask import current_app, render_template, redirect, url_for
 from flask_login import current_user
+from auth_utils import decrypt_data
 
 class PostLoginHandler:
     """
@@ -44,11 +45,16 @@ class PostLoginHandler:
 
         # Recent activities
         cursor.execute("""
-            SELECT date, type, notes, doctor
+            SELECT date, type, notes_encrypted, doctor
             FROM medical_history
             ORDER BY date DESC LIMIT 5
         """)
-        recent_activities = cursor.fetchall()
+        recent_activities_raw = cursor.fetchall()
+        recent_activities = []
+        for activity in recent_activities_raw:
+            date, type_, encrypted_notes, doctor = activity
+            notes = decrypt_data(encrypted_notes) if encrypted_notes else ""
+            recent_activities.append((date, type_, notes, doctor))
 
         # Risk distribution
         cursor.execute("SELECT risk_level, COUNT(*) FROM patients GROUP BY risk_level")
