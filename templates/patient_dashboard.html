@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- PATIENT DASHBOARD HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-heartbeat text-danger me-2"></i>Your Health Dashboard
+        </h1>
+        <p class="text-muted mb-0">Manage your appointments and medical records</p>
+    </div>
+    <a href="/edit_profile" class="btn btn-warning">
+        <i class="fas fa-edit me-1"></i>Edit Profile
+    </a>
+</div>
+
+<!-- QUICK STATS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-danger">{% if upcoming_appointments %}{{ upcoming_appointments|length }}{% else %}0{% endif %}</div>
+            <div class="stats-label">Upcoming Appointments</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-info">{% if medical_history %}{{ medical_history|length }}{% else %}0{% endif %}</div>
+            <div class="stats-label">Medical Records</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-success">100%</div>
+            <div class="stats-label">Health Score</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-number text-warning">Low</div>
+            <div class="stats-label">Risk Level</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- UPCOMING APPOINTMENTS -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-custom">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-alt text-primary me-2"></i>Upcoming Appointments
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_appointments %}
+                    <div class="list-group list-group-flush">
+                        {% for appointment in upcoming_appointments %}
+                        <div class="list-group-item px-0 py-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ appointment.doctor }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>{{ appointment.date }}
+                                        <br>
+                                        <i class="fas fa-clock me-1"></i>{{ appointment.time }}
+                                        <br>
+                                        <i class="fas fa-stethoscope me-1"></i>{{ appointment.type }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-success">Scheduled</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-4">
+                        <i class="fas fa-calendar-times fa-2x mb-2"></i><br>
+                        No upcoming appointments
+                    </p>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-white border-top">
+                <a href="/appointments" class="btn btn-sm btn-primary w-100">
+                    <i class="fas fa-plus me-1"></i>Book New Appointment
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MEDICAL HISTORY -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-custom">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-history text-info me-2"></i>Recent Medical History
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if medical_history %}
+                    <div class="list-group list-group-flush">
+                        {% for entry in medical_history[:5] %}
+                        <div class="list-group-item px-0 py-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ entry[1] }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-user-md me-1"></i>{{ entry[3] }}<br>
+                                        <i class="fas fa-calendar me-1"></i>{{ entry[0] }}
+                                    </small>
+                                </div>
+                            </div>
+                            {% if entry[2] %}
+                            <div class="mt-2">
+                                <small class="text-muted">{{ entry[2] }}</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-4">
+                        <i class="fas fa-file-medical fa-2x mb-2"></i><br>
+                        No medical history available
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QUICK LINKS -->
+<div class="row g-3 mt-2">
+    <div class="col-md-3">
+        <a href="/doctors" class="card border-0 shadow-custom text-decoration-none link-body-emphasis">
+            <div class="card-body text-center py-4">
+                <i class="fas fa-user-md fa-2x text-primary mb-2"></i>
+                <h6 class="mb-0">View Doctors</h6>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="/medicines" class="card border-0 shadow-custom text-decoration-none link-body-emphasis">
+            <div class="card-body text-center py-4">
+                <i class="fas fa-prescription-bottle fa-2x text-danger mb-2"></i>
+                <h6 class="mb-0">View Medicines</h6>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="/risk" class="card border-0 shadow-custom text-decoration-none link-body-emphasis">
+            <div class="card-body text-center py-4">
+                <i class="fas fa-heartbeat fa-2x text-warning mb-2"></i>
+                <h6 class="mb-0">Health Check</h6>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="/settings" class="card border-0 shadow-custom text-decoration-none link-body-emphasis">
+            <div class="card-body text-center py-4">
+                <i class="fas fa-cog fa-2x text-info mb-2"></i>
+                <h6 class="mb-0">Settings</h6>
+            </div>
+        </a>
+    </div>
+</div>
+
+<style>
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    text-align: center;
+}
+
+.stats-card:nth-child(2) {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stats-card:nth-child(3) {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stats-card:nth-child(4) {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.stats-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.stats-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+.shadow-custom {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+</style>
+
+{% endblock %}

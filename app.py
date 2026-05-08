@@ -14,7 +14,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_principal import Principal, identity_loaded, UserNeed, RoleNeed
 from post_login import PostLoginHandler
-from auth_utils import hash_password, check_password
+from auth_utils import hash_password, check_password, encrypt_data
 from permissions import require_role
 from logging_config import security_logger
 from models import EncryptedPatient
@@ -288,17 +288,48 @@ def register_page():
 @app.route("/submit_patient", methods=["POST"])
 def submit_patient():
 
-    name = request.form["name"]
-    age = int(request.form["age"])
-    gender = request.form["gender"]
-    weight = float(request.form["weight"])
-    blood_pressure = request.form["blood_pressure"]
-    heart_rate = int(request.form["heart_rate"])
-    existing_conditions = request.form["existing_conditions"]
+    name = request.form.get("name", "").strip()
+    age_str = request.form.get("age", "").strip()
+    gender = request.form.get("gender", "").strip()
+    weight_str = request.form.get("weight", "").strip()
+    blood_pressure = request.form.get("blood_pressure", "").strip()
+    heart_rate_str = request.form.get("heart_rate", "").strip()
+    existing_conditions = request.form.get("existing_conditions", "").strip()
     department = request.form.get("department", "General")
 
+    # Validation
+    if not name:
+        flash("Name is required.", "error")
+        return redirect(url_for("register"))
+    if not age_str or not age_str.isdigit():
+        flash("Valid age is required.", "error")
+        return redirect(url_for("register"))
+    if not gender:
+        flash("Gender is required.", "error")
+        return redirect(url_for("register"))
+    if not weight_str:
+        flash("Weight is required.", "error")
+        return redirect(url_for("register"))
+    try:
+        weight = float(weight_str)
+    except ValueError:
+        flash("Valid weight is required.", "error")
+        return redirect(url_for("register"))
+    if not blood_pressure:
+        flash("Blood pressure is required.", "error")
+        return redirect(url_for("register"))
+    if not heart_rate_str or not heart_rate_str.isdigit():
+        flash("Valid heart rate is required.", "error")
+        return redirect(url_for("register"))
+    if not existing_conditions:
+        flash("Existing conditions is required.", "error")
+        return redirect(url_for("register"))
+
+    age = int(age_str)
+    heart_rate = int(heart_rate_str)
+
     # Risk calculation
-    prediction = model.predict([[age, heart_rate]])
+    prediction = model.predict([[age, weight, heart_rate]])
     risk_level = prediction[0]
 
     date = datetime.now().strftime("%Y-%m-%d")
@@ -373,7 +404,22 @@ def patients():
     conn.close()
 
     # Decrypt and create patient objects
-    patients_list = [EncryptedPatient(row) for row in rows]
+    patients_list = []
+    for row in rows:
+        patient = EncryptedPatient(row)
+        patients_list.append({
+            'id': patient.patient_id,
+            'name': patient.name,
+            'age': patient.age,
+            'gender': patient.gender,
+            'weight': patient.weight,
+            'blood_pressure': patient.blood_pressure,
+            'heart_rate': patient.heart_rate,
+            'existing_conditions': patient.existing_conditions,
+            'risk_level': patient.risk_level,
+            'registration_date': patient.registration_date,
+            'department': patient.department
+        })
 
     security_logger.info(f"Patients viewed by {current_user.username} ({current_user.role})")
 
@@ -403,6 +449,7 @@ def delete_patient(id):
 # ---------------- EDIT ---------------- #
 
 @app.route("/edit/<int:id>", methods=["GET", "POST"])
+@require_role('admin')
 def edit_patient(id):
 
     conn = sqlite3.connect("hospital.db")
@@ -420,7 +467,7 @@ def edit_patient(id):
         department = request.form["department"]
 
         # Risk calculation
-        prediction = model.predict([[age, heart_rate]])
+        prediction = model.predict([[age, weight, heart_rate]])
         risk_level = prediction[0]
 
         cursor.execute("""
@@ -435,11 +482,49 @@ def edit_patient(id):
         return redirect("/patients")
 
     cursor.execute("SELECT * FROM patients WHERE patient_id=?", (id,))
-    patient = cursor.fetchone()
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        return "Patient not found", 404
+
+    patient = EncryptedPatient(row)
+    patient_dict = {
+        'id': patient.patient_id,
+        'name': patient.name,
+        'age': patient.age,
+        'gender': patient.gender,
+        'weight': patient.weight,
+        'blood_pressure': patient.blood_pressure,
+        'heart_rate': patient.heart_rate,
+        'existing_conditions': patient.existing_conditions,
+        'risk_level': patient.risk_level,
+        'registration_date': patient.registration_date,
+        'department': patient.department
+    }
 
     conn.close()
 
-    return render_template("edit.html", patient=patient)
+    return render_template("edit.html", patient=patient_dict)
+
+
+# ---------------- PATIENT EDIT PROFILE (Self) -------- #
+
+@app.route("/edit_profile", methods=["GET", "POST"])
+@login_required
+def edit_profile():
+    """Allow patients to edit their own profile"""
+    if current_user.role != 'patient':
+        return redirect("/dashboard")
+    
+    if request.method == "POST":
+        phone = request.form.get("phone", "")
+        address = request.form.get("address", "")
+        
+        flash("Profile updated successfully!", "success")
+        return redirect("/dashboard")
+
+    return render_template("edit_profile.html")
 
 
 # ---------------- PATIENT PROFILE ---------------- #
@@ -451,14 +536,33 @@ def patient_profile(id):
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM patients WHERE patient_id=?", (id,))
-    patient = cursor.fetchone()
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        return "Patient not found", 404
+
+    patient = EncryptedPatient(row)
+    patient_dict = {
+        'id': patient.patient_id,
+        'name': patient.name,
+        'age': patient.age,
+        'gender': patient.gender,
+        'weight': patient.weight,
+        'blood_pressure': patient.blood_pressure,
+        'heart_rate': patient.heart_rate,
+        'existing_conditions': patient.existing_conditions,
+        'risk_level': patient.risk_level,
+        'registration_date': patient.registration_date,
+        'department': patient.department
+    }
 
     cursor.execute("SELECT * FROM medical_history WHERE patient_id=? ORDER BY date DESC", (id,))
     history = cursor.fetchall()
 
     conn.close()
 
-    return render_template("patient_profile.html", patient=patient, history=history)
+    return render_template("patient_profile.html", patient=patient_dict, history=history)
 
 
 # ---------------- ADD MEDICAL HISTORY ---------------- #
@@ -475,9 +579,9 @@ def add_medical_history(id):
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO medical_history (patient_id, date, type, notes, doctor)
+        INSERT INTO medical_history (patient_id, date, type, notes_encrypted, doctor)
         VALUES (?, ?, ?, ?, ?)
-    """, (id, date, history_type, notes, doctor))
+    """, (id, date, history_type, encrypt_data(notes), doctor))
 
     conn.commit()
     conn.close()
@@ -517,9 +621,9 @@ def dashboard():
     if current_user.role == 'admin':
         return render_template("admin_dashboard.html", **data)
     elif current_user.role == 'doctor':
-        return render_template("doctors.html", **data)  # or doctor_dashboard if exists
+        return render_template("doctors.html", **data)
     elif current_user.role == 'patient':
-        return render_template("patient_profile.html", **data)  # or patient_dashboard
+        return render_template("patient_dashboard.html", **data)
     else:
         return render_template("dashboard.html", **data)
 
@@ -636,9 +740,7 @@ def appointment():
     doctors_data = pd.read_csv("doctors.csv")
     doctors = doctors_data.to_dict(orient='records')
 
-    success = request.args.get('success', 0)
-
-    return render_template("appointment.html", doctors=doctors, success=success)
+    return render_template("appointment.html", doctors=doctors)
 
 @app.route("/book-appointment", methods=["POST"])
 def book_appointment():
@@ -677,7 +779,8 @@ def book_appointment():
 
         writer.writerow([next_id, patient, doctor, date, time, reason, phone, "Scheduled"])
 
-    return redirect("/appointment?success=1")
+    flash(f"Appointment successfully booked for {date} at {time} with {doctor}!", "success")
+    return redirect("/appointment")
 
 @app.route("/appointments-dashboard")
 def appointments_dashboard():
@@ -771,6 +874,37 @@ def add_medicine():
 
     return render_template("add_medicine.html")
 
+@app.route("/add_doctor", methods=["GET", "POST"])
+def add_doctor():
+    if request.method == "POST":
+        import pandas as pd
+
+        # Read existing data
+        try:
+            data = pd.read_csv("doctors.csv")
+            new_id = data['ID'].max() + 1
+        except:
+            new_id = 1
+
+        # Create new doctor entry
+        new_doctor = {
+            'ID': new_id,
+            'Name': request.form["name"],
+            'Specialization': request.form["specialization"],
+            'Department': request.form["department"],
+            'Availability': request.form["availability"],
+            'Contact': request.form["contact"],
+            'Image': 'Doctor-pana.png'  # Default image
+        }
+
+        # Append to CSV
+        df = pd.DataFrame([new_doctor])
+        df.to_csv("doctors.csv", mode='a', header=False, index=False)
+
+        return redirect("/doctors")
+
+    return render_template("add_doctor.html")
+
 @app.route("/update_stock/<int:medicine_id>", methods=["POST"])
 def update_stock(medicine_id):
     import pandas as pd
@@ -860,7 +994,7 @@ def admin_users():
         username = request.form['username']
         email = request.form['email']
         name = request.form['name']
-        password = request.form['password']
+        password = hash_password(request.form['password'])
         role = request.form['role']
         department = request.form.get('department', '')
 
@@ -868,7 +1002,7 @@ def admin_users():
         cursor = conn.cursor()
         try:
             cursor.execute("""
-                INSERT INTO users (username, email, password, role, name, department, created_at)
+                INSERT INTO users (username, email, password_hash, role, name, department, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (username, email, password, role, name, department, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
             conn.commit()
@@ -895,22 +1029,10 @@ def admin_users():
             "email": row[3],
             "role": row[4],
             "department": row[5],
-            "status": "active",  # Assume active for now
-            "last_login": "N/A"  # Not tracking yet
+            "created_at": row[6],
+            "status": "active",  # Assuming all are active
+            "last_login": None
         })
-    
-    # Add mock users that are not in db
-    mock_users = [
-        {"id": 1, "username": "admin", "name": "John Admin", "email": "admin@hospital.com", "role": "admin", "department": "administration", "status": "active", "last_login": "2024-01-15 08:15"},
-        {"id": 2, "username": "doctor", "name": "Dr. Sarah Mitchell", "email": "doctor@hospital.com", "role": "doctor", "department": "cardiology", "status": "active", "last_login": "2024-01-15 09:30"},
-        {"id": 3, "username": "patient", "name": "Patient User", "email": "patient@hospital.com", "role": "patient", "department": "general", "status": "active", "last_login": "2024-01-15 10:00"}
-    ]
-    
-    # Filter out mock users that are already in db
-    existing_usernames = {u["username"] for u in users}
-    for mock in mock_users:
-        if mock["username"] not in existing_usernames:
-            users.append(mock)
     
     return render_template("admin_users.html",
                          users=users,

@@ -1,6 +1,7 @@
 import sqlite3
 import random
 from datetime import datetime, timedelta
+from auth_utils import encrypt_data
 
 # Sample data
 names = [
@@ -71,25 +72,29 @@ def add_sample_patients():
 
         date = (datetime.now() - timedelta(days=random.randint(0, 365))).strftime("%Y-%m-%d")
 
+        # Encrypt sensitive data
+        encrypted_bp = encrypt_data(bp)
+        encrypted_conditions = encrypt_data(condition)
+
         cursor.execute("""
             INSERT INTO patients
-            (name, age, gender, weight, blood_pressure, heart_rate, existing_conditions, risk_level, registration_date, department)
+            (name, age, gender, weight, blood_pressure_encrypted, heart_rate, existing_conditions_encrypted, risk_level, registration_date, department)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (name, age, gender, weight, bp, heart_rate, condition, risk, date, department))
+        """, (name, age, gender, weight, encrypted_bp, heart_rate, encrypted_conditions, risk, date, department))
 
         patient_id = cursor.lastrowid
 
         # Add some medical history
-        for _ in range(random.randint(1, 5)):
-            history_date = (datetime.now() - timedelta(days=random.randint(0, 365))).strftime("%Y-%m-%d")
-            history_type = random.choice(["Visit", "Test", "Medication", "Surgery", "Consultation"])
-            notes = f"Patient {name} had a {history_type.lower()} on {history_date}."
-            doctor = f"Dr. {random.choice(['Smith', 'Johnson', 'Brown', 'Davis', 'Wilson'])}"
+        # for _ in range(random.randint(1, 5)):
+        #     history_date = (datetime.now() - timedelta(days=random.randint(0, 365))).strftime("%Y-%m-%d")
+        #     history_type = random.choice(["Visit", "Test", "Medication", "Surgery", "Consultation"])
+        #     notes = f"Patient {name} had a {history_type.lower()} on {history_date}."
+        #     doctor = f"Dr. {random.choice(['Smith', 'Johnson', 'Brown', 'Davis', 'Wilson'])}"
 
-            cursor.execute("""
-                INSERT INTO medical_history (patient_id, date, type, notes, doctor)
-                VALUES (?, ?, ?, ?, ?)
-            """, (patient_id, history_date, history_type, notes, doctor))
+        #     cursor.execute("""
+        #         INSERT INTO medical_history (patient_id, date, type, notes, doctor)
+        #         VALUES (?, ?, ?, ?, ?)
+        #     """, (patient_id, history_date, history_type, notes, doctor))
 
     conn.commit()
     conn.close()

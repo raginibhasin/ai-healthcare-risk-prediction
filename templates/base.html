@@ -51,12 +51,14 @@
                     </a>
                 </li>
 
-                <!-- PATIENTS -->
+                {% if current_user.is_authenticated and current_user.role != 'patient' %}
+                <!-- PATIENTS (Admin/Doctor Only) -->
                 <li class="nav-item">
                     <a class="nav-link px-3" href="/patients">
                         <i class="fas fa-users me-1"></i>Patients
                     </a>
                 </li>
+                {% endif %}
 
                 <!-- APPOINTMENTS -->
                 <li class="nav-item">
@@ -80,7 +82,7 @@
                 </li>
 
                 {% if current_user.is_authenticated and current_user.role == 'admin' %}
-                <!-- ADMIN -->
+                <!-- ADMIN (Admin Only) -->
                 <li class="nav-item">
                     <a class="nav-link px-3" href="/admin">
                         <i class="fas fa-user-shield me-1"></i>Admin
@@ -94,12 +96,16 @@
                         <i class="fas fa-ellipsis-h me-1"></i>More <i class="fas fa-chevron-down ms-1"></i>
                     </a>
                     <ul class="dropdown-menu shadow">
+                        {% if current_user.is_authenticated and current_user.role != 'patient' %}
                         <li><a class="dropdown-item" href="/medicines">
                             <i class="fas fa-pills me-2"></i>Medicine Inventory</a></li>
+                        {% endif %}
                         <li><a class="dropdown-item" href="/appointments-dashboard">
                             <i class="fas fa-calendar-alt me-2"></i>Appointments Dashboard</a></li>
+                        {% if current_user.is_authenticated and current_user.role != 'patient' %}
                         <li><a class="dropdown-item" href="/risk-dashboard">
                             <i class="fas fa-chart-bar me-2"></i>Risk Dashboard</a></li>
+                        {% endif %}
                         {% if current_user.is_authenticated and current_user.role == 'admin' %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/settings">

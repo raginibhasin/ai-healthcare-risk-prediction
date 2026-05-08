@@ -72,6 +72,8 @@ class PostLoginHandler:
 
     def _get_doctor_dashboard_data(self):
         """Get data for doctor dashboard"""
+        import pandas as pd
+        
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
@@ -99,12 +101,20 @@ class PostLoginHandler:
             'Schedule follow-up for Patient ID: 789'
         ]
 
+        # Load doctors from CSV
+        try:
+            doctors_data = pd.read_csv("doctors.csv")
+            doctors = doctors_data.to_dict(orient="records")
+        except:
+            doctors = []
+
         conn.close()
 
         return {
             'doctor_patients': doctor_patients,
             'today_appointments': today_appointments,
             'pending_tasks': pending_tasks,
+            'doctors': doctors,
             'user_role': 'doctor'
         }
 
@@ -121,12 +131,16 @@ class PostLoginHandler:
         # Medical history
         if patient_info:
             cursor.execute("""
-                SELECT date, type, notes, doctor
+                SELECT date, type, notes_encrypted, doctor
                 FROM medical_history
                 WHERE patient_id = ?
                 ORDER BY date DESC
             """, (patient_info[0],))
-            medical_history = cursor.fetchall()
+            medical_history_raw = cursor.fetchall()
+            medical_history = [
+                (date, type_, decrypt_data(notes_encrypted) if notes_encrypted else '', doctor)
+                for date, type_, notes_encrypted, doctor in medical_history_raw
+            ]
         else:
             medical_history = []
 

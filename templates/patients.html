@@ -83,7 +83,7 @@
     <div class="col-md-3">
         <div class="stats-card">
             <div class="stats-number text-success">
-                {{ patients|selectattr('8', 'equalto', 'Low')|list|length }}
+                {{ patients|selectattr('risk_level', 'equalto', 'Low')|list|length }}
             </div>
             <div class="stats-label">Low Risk</div>
         </div>
@@ -91,7 +91,7 @@
     <div class="col-md-3">
         <div class="stats-card">
             <div class="stats-number text-warning">
-                {{ patients|selectattr('8', 'equalto', 'Medium')|list|length }}
+                {{ patients|selectattr('risk_level', 'equalto', 'Medium')|list|length }}
             </div>
             <div class="stats-label">Medium Risk</div>
         </div>
@@ -99,7 +99,7 @@
     <div class="col-md-3">
         <div class="stats-card">
             <div class="stats-number text-danger">
-                {{ patients|selectattr('8', 'equalto', 'High')|list|length }}
+                {{ patients|selectattr('risk_level', 'equalto', 'High')|list|length }}
             </div>
             <div class="stats-label">High Risk</div>
         </div>
@@ -125,41 +125,41 @@
                     </thead>
                     <tbody>
                         {% for p in patients %}
-                        <tr class="patient-row" data-risk="{{ p[8] }}" data-name="{{ p[1] }}">
+                        <tr class="patient-row" data-risk="{{ p.risk_level }}" data-name="{{ p.name }}">
                             <td>
-                                <span class="fw-semibold text-primary">#{{ p[0] }}</span>
+                                <span class="fw-semibold text-primary">#{{ p.id }}</span>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
                                     <div class="avatar-sm bg-primary-subtle text-primary me-2">
-                                        {{ p[1][0] }}
+                                        {{ p.name[0] }}
                                     </div>
                                     <div>
-                                        <div class="fw-semibold">{{ p[1] }}</div>
-                                        <small class="text-muted">ID: {{ p[0] }}</small>
+                                        <div class="fw-semibold">{{ p.name }}</div>
+                                        <small class="text-muted">ID: {{ p.id }}</small>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <span class="badge bg-light text-dark">{{ p[2] }} years</span>
+                                <span class="badge bg-light text-dark">{{ p.age }} years</span>
                                 <br>
-                                <small class="text-muted">{{ p[3] }}</small>
+                                <small class="text-muted">{{ p.gender }}</small>
                             </td>
                             <td>
                                 <div class="vital-signs">
                                     <span class="badge bg-danger-subtle text-danger">
-                                        <i class="fas fa-heartbeat me-1"></i>{{ p[6] }} bpm
+                                        <i class="fas fa-heartbeat me-1"></i>{{ p.heart_rate }} bpm
                                     </span>
                                     <br>
-                                    <small class="text-muted">BP: {{ p[5] }}</small>
+                                    <small class="text-muted">BP: {{ p.blood_pressure }}</small>
                                 </div>
                             </td>
                             <td>
-                                {% if p[8] == 'High' %}
+                                {% if p.risk_level == 'High' %}
                                     <span class="badge bg-danger">
                                         <i class="fas fa-exclamation-triangle me-1"></i>High Risk
                                     </span>
-                                {% elif p[8] == 'Medium' %}
+                                {% elif p.risk_level == 'Medium' %}
                                     <span class="badge bg-warning">
                                         <i class="fas fa-exclamation-circle me-1"></i>Medium Risk
                                     </span>
@@ -170,14 +170,14 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <span class="text-muted">{{ p[9] or '2024-01-15' }}</span>
+                                <span class="text-muted">{{ p.registration_date or '2024-01-15' }}</span>
                             </td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <a href="/patient/{{ p[0] }}" class="btn btn-sm btn-outline-info" title="View Profile">
+                                    <a href="/patient/{{ p.id }}" class="btn btn-sm btn-outline-info" title="View Profile">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="viewPatientTimeline('{{ p[0] }}')" title="View Timeline">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewPatientTimeline('{{ p.id }}')" title="View Timeline">
                                         <i class="fas fa-history"></i>
                                     </button>
                                     <a href="/edit/{{ p[0] }}" class="btn btn-sm btn-outline-warning" title="Edit Patient">
