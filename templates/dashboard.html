@@ -14,7 +14,7 @@
         <button class="btn btn-outline-primary">
             <i class="fas fa-download me-1"></i>Export Report
         </button>
-        <button class="btn btn-primary">
+        <button class="btn btn-primary" onclick="location.reload()">
             <i class="fas fa-refresh me-1"></i>Refresh Data
         </button>
     </div>
@@ -227,28 +227,28 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-6">
-                        <button class="btn btn-outline-primary w-100 p-3 quick-action-btn">
+                        <a href="/register" class="btn btn-outline-primary w-100 p-3 quick-action-btn text-decoration-none">
                             <i class="fas fa-user-plus fa-2x mb-2"></i>
                             <div>New Patient</div>
-                        </button>
+                        </a>
                     </div>
                     <div class="col-6">
-                        <button class="btn btn-outline-success w-100 p-3 quick-action-btn">
+                        <a href="/appointment" class="btn btn-outline-success w-100 p-3 quick-action-btn text-decoration-none">
                             <i class="fas fa-calendar-plus fa-2x mb-2"></i>
                             <div>Book Appointment</div>
-                        </button>
+                        </a>
                     </div>
                     <div class="col-6">
-                        <button class="btn btn-outline-info w-100 p-3 quick-action-btn">
+                        <a href="/reports" class="btn btn-outline-info w-100 p-3 quick-action-btn text-decoration-none">
                             <i class="fas fa-file-medical fa-2x mb-2"></i>
                             <div>Medical Report</div>
-                        </button>
+                        </a>
                     </div>
                     <div class="col-6">
-                        <button class="btn btn-outline-warning w-100 p-3 quick-action-btn">
+                        <a href="/medicines" class="btn btn-outline-warning w-100 p-3 quick-action-btn text-decoration-none">
                             <i class="fas fa-pills fa-2x mb-2"></i>
                             <div>Medicine Inventory</div>
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>

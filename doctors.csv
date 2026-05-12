@@ -14,3 +14,10 @@ ID,Name,Specialization,Department,Availability,Contact,Image
 13,Dr. Kavita Menon,Pathologist,Pathology,Available,9876543222,Doctor-pana.png
 14,Dr. Suresh Iyer,General Physician,General Medicine,Available,9876543223,Doctor-pana.png
 15,Dr. Nandini Reddy,Oncologist,Oncology,Unavailable,9876543224,Doctor-pana.png
+16,Dr. Priyanka Nair,Cardiologist,Cardiology,Available,9876543225,Doctor-pana.png
+17,Dr. Arvind Rao,Neurologist,Neurology,Available,9876543226,Doctor-pana.png
+18,Dr. Meena Iyer,Orthopedic Surgeon,Orthopedics,Unavailable,9876543227,Doctor-pana.png
+19,Dr. Rohit Kapoor,Dermatologist,Dermatology,Available,9876543228,Doctor-pana.png
+20,Dr. Anjali Das,Pediatrician,Pediatrics,Available,9876543229,Doctor-pana.png
+21,Simran Singh,ENT Specialist,ENT,Available,9875641233,Doctor-pana.png
+22,Simran Singh,ENT Specialist,ENT,Available,9875641233,Doctor-pana.png

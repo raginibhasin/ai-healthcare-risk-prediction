@@ -1,12 +1,7 @@
-<<<<<<< HEAD
-ID,Patients,Doctor,Date,Time,Reason,ragini,Dr. Rahul Mehta,2026-04-12,14:32,cold
+ID,Patient,Doctor,Date,Time,Reason,Phone,Status
 1,Rahul Vashisht,Dr. Sarah Ahmed,2026-04-30,15:00,Headache and Mild Fever,9999888856,Scheduled
 2,Rahul Vashisht,Dr. Sarah Ahmed,2026-04-30,16:00,Headache and Mild Fever,9999888856,Scheduled
-3,Rahul Vashisht,Dr. Sarah Ahmed,2026-05-05,17:00,pain in chest area,9999888856,Scheduled
+3,Rahul Vashisht,Dr. Sarah Ahmed,2026-05-05,17:00,Pain in chest area,9999888856,Scheduled
 4,Preet Singh,Dr. Arjun Patel,2026-05-05,16:00,Heavy pain in tooth,9999888856,Scheduled
 5,Preet Singh,Dr. Sarah Ahmed,2026-05-05,15:30,Heart pain,9999888856,Scheduled
-=======
-ID,Patients,Doctor,Date,Time,Reason,ragini,Dr. Rahul Mehta,2026-04-12,14:32,cold
-1,Rahul Vashisht,Dr. Sarah Ahmed,2026-04-30,15:00,Headache and Mild Fever,9999888856,Scheduled
-2,Rahul Vashisht,Dr. Sarah Ahmed,2026-04-30,16:00,Headache and Mild Fever,9999888856,Scheduled
->>>>>>> cb9d55459c2b5641af4c1264e6857fd8344774fc
+6,Irfan Khan,Dr. Arjun Patel,2026-12-05,17:00,fever,9999888856,Scheduled
